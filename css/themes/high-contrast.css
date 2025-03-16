@@ -1,0 +1,8 @@
+/* High contrast theme for accessibility */
+:root {
+    --primary-color: #000;
+    --secondary-color: #fff;
+    --text-color: #fff;
+    --background-color: #000;
+    --card-background: #333;
+}

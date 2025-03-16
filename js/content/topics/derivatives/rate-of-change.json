@@ -1,0 +1,25 @@
+{
+    "title": "Rate of Change",
+    "description": "Understanding the concept of rate of change in calculus.",
+    "sections": [
+        {
+            "title": "Introduction",
+            "content": "The rate of change is a fundamental concept in calculus..."
+        },
+        {
+            "title": "Average Rate of Change",
+            "content": "The average rate of change between two points..."
+        },
+        {
+            "title": "Instantaneous Rate of Change",
+            "content": "As we make the interval smaller and smaller..."
+        }
+    ],
+    "examples": [
+        {
+            "title": "Example 1",
+            "problem": "Find the average rate of change...",
+            "solution": "Step 1: ..."
+        }
+    ]
+}

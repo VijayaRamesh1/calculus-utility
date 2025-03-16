@@ -1,0 +1,13 @@
+{
+    "metadata": {
+        "version": 4.5,
+        "type": "Object",
+        "generator": "Object3D.toJSON"
+    },
+    "geometries": [],
+    "materials": [],
+    "object": {
+        "type": "Group",
+        "name": "Car"
+    }
+}

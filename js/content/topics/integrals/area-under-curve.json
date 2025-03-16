@@ -1,0 +1,17 @@
+{
+    "title": "Area Under the Curve",
+    "description": "Understanding how integrals calculate areas.",
+    "sections": [
+        {
+            "title": "Introduction",
+            "content": "The area under a curve represents..."
+        }
+    ],
+    "examples": [
+        {
+            "title": "Example 1",
+            "problem": "Calculate the area under f(x) = x² from x=0 to x=2",
+            "solution": "Step 1: ..."
+        }
+    ]
+}
