@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Interactive rate of change visualization with elegant classical design"/>
+  <title>Rate of Change - Calculus Visualizer</title>
+  <link rel="stylesheet" href="../../css/derivatives.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.6/katex.min.css"/>
+</head>
+<body>
+  <!-- Header with navigation -->
+  <header>
+    <div class="logo-container">
+      <svg class="logo" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#225B7D" stroke-width="2"/>
+        <line x1="10" y1="50" x2="90" y2="50" stroke="#225B7D" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="10" x2="50" y2="90" stroke="#225B7D" stroke-width="2" stroke-linecap="round"/>
+        <path d="M90 50C90 28 72 10 50 10C28 10 10 28 10 50" stroke="#225B7D" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h1 class="logo-text">Calculus Visualizer</h1>
+    </div>
+    
+    <nav>
+      <ul>
+        <li>
+          <a href="/calculus/derivatives" class="nav-item active">
+            <svg class="icon" viewBox="0 0 24 24">
+              <rect x="5" y="5" width="6" height="6" fill="#225B7D"/>
+              <rect x="13" y="5" width="6" height="6" fill="#225B7D"/>
+              <rect x="5" y="13" width="6" height="6" fill="#225B7D"/>
+              <rect x="13" y="13" width="6" height="6" fill="#225B7D"/>
+            </svg>
+            Derivatives
+          </a>
+        </li>
+        <li>
+          <a href="/calculus/integrals" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M8 4C6 4 6 20 8 20" stroke="#225B7D" stroke-width="2" fill="none"/>
+            </svg>
+            Integrals
+          </a>
+        </li>
+        <li>
+          <a href="/calculus/limits" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M6 7V17M18 7V17M6 12H18" stroke="#225B7D" stroke-width="2"/>
+            </svg>
+            Limits
+          </a>
+        </li>
+        <li>
+          <a href="/calculus/vector" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6L18 18M12 4V20" stroke="#225B7D" stroke-width="2"/>
+            </svg>
+            Vector Calculus
+          </a>
+        </li>
+      </ul>
+    </nav>
+    
+    <div class="controls">
+      <button class="control-button theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path d="M12 4V2M12 22v-2M4 12H2m20 0h-2m-2.5-5.5L18 5M6 19l1.5-1.5M6 5l1.5 1.5m11 11L18 19M12 17a5 5 0 100-10 5 5 0 000 10z" 
+                stroke="#225B7D" stroke-width="1.5" fill="none"/>
+        </svg>
+      </button>
+      <button class="control-button settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <circle cx="12" cy="12" r="3" stroke="#225B7D" stroke-width="1.5" fill="none"/>
+          <path d="M12 2v4m0 12v4m10-10h-4m-16 0h4m14-7l-3.5 3.5m-11 11L5 16M5 5l3.5 3.5m11 11L16 16" 
+                stroke="#225B7D" stroke-width="1.5"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Topic View -->
+  <section class="topic-view active">
+    <div class="topic-header">
+      <div class="topic-nav">
+        <a href="/calculus/derivatives" class="back-link">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path d="M15 18l-6-6 6-6" stroke="#225B7D" stroke-width="2" fill="none"/>
+          </svg>
+          Back to Topics
+        </a>
+      </div>
+      <h2 class="topic-title-large">Rate of Change</h2>
+      <div class="divider" style="margin-left: 0;"></div>
+    </div>
+    
+    <div class="topic-content">
+      <!-- Visualization Column -->
+      <div class="visualization-column">
+        <div class="visualization-container">
+          <div id="visualization-canvas"></div>
+          <div id="loading-indicator" class="loading-indicator">
+            <div class="spinner"></div>
+            <p>Loading visualization...</p>
+          </div>
+        </div>
+        
+        <div class="controls-container">
+          <div class="slider-control">
+            <div class="slider-label">
+              <span class="slider-label-text">Vehicle Speed</span>
+              <span id="speed-value" class="slider-value">5.0</span>
+            </div>
+            <input 
+              type="range" 
+              id="speed-slider" 
+              min="1" 
+              max="10" 
+              step="0.1" 
+              value="5.0"
+              class="range-slider"
+            >
+          </div>
+          
+          <div class="slider-control">
+            <div class="slider-label">
+              <span class="slider-label-text">Time Interval</span>
+              <span id="interval-value" class="slider-value">0.5</span>
+            </div>
+            <input 
+              type="range" 
+              id="interval-slider" 
+              min="0.1" 
+              max="2.0" 
+              step="0.1" 
+              value="0.5"
+              class="range-slider"
+            >
+          </div>
+          
+          <div class="animation-controls">
+            <button id="play-pause" class="control-button animation-control">
+              <svg viewBox="0 0 24 24" width="20" height="20">
+                <path d="M8 5v14l11-7z" fill="#225B7D"/>
+              </svg>
+            </button>
+            <button id="reset" class="control-button animation-control">
+              <svg viewBox="0 0 24 24" width="20" height="20">
+                <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" 
+                      fill="#225B7D"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Content Column -->
+      <div class="content-column">
+        <div class="explanation-section">
+          <h3 class="explanation-title">Understanding Rate of Change</h3>
+          <p class="explanation-text">
+            The rate of change measures how quickly one quantity changes relative to another. 
+            In calculus, this concept forms the foundation of derivatives.
+          </p>
+          <p class="explanation-text">
+            When we observe a vehicle's movement, its speed represents the rate at which distance changes over time. 
+            For example, 60 miles per hour means the distance increases by 60 miles for each hour that passes.
+          </p>
+          
+          <div class="formula-card">
+            <div class="formula" id="derivative-formula">
+              <!-- Will be rendered with KaTeX -->
+            </div>
+            <div class="formula-caption">The Derivative Definition</div>
+          </div>
+          
+          <p class="explanation-text">
+            In the visualization, you can adjust the vehicle's speed and observe how the distance changes over different time intervals.
+            When the time interval is small, we're approaching the <span class="highlight-term" data-definition="The instantaneous rate of change at a specific point">instantaneous rate of change</span>,
+            which is exactly what a derivative calculates.
+          </p>
+        </div>
+        
+        <div class="application-section">
+          <h3 class="application-title">Real-World Application</h3>
+          <p class="explanation-text">
+            When driving a car, the speedometer shows the rate of change of distance with respect to time. 
+            This is an example of a derivative in action. 
+          </p>
+          <p class="explanation-text">
+            Similarly, when analyzing how quickly a population grows, the economy expands, 
+            or temperature rises, we're calculating rates of change to understand dynamic processes.
+          </p>
+        </div>
+        
+        <div class="related-topics">
+          <h3 class="related-title">Related Topics</h3>
+          <div class="topic-pills">
+            <a href="/calculus/derivatives/tangent-slope" class="topic-pill">Tangent Slope</a>
+            <a href="/calculus/derivatives/instantaneous-velocity" class="topic-pill">Instantaneous Velocity</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>© 2025 Calculus Visualizer. A tool for mathematical exploration.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r148/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.6/katex.min.js"></script>
+  <script src="../../js/rate-of-change.js"></script>
+</body>
+</html>
