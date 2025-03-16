@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Interactive calculus visualization tool with elegant classical design."/>
+  <title>Calculus Visualizer - Classical Theme</title>
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Georgia, serif;
+      background-color: #F0EBE1;
+      color: #2A2520;
+      line-height: 1.6;
+    }
+    
+    /* Header styles */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid #D6D0C4;
+      background-color: #F0EBE1;
+    }
+    
+    .logo-container {
+      display: flex;
+      align-items: center;
+    }
+    
+    .logo {
+      width: 60px;
+      height: 60px;
+      margin-right: 15px;
+    }
+    
+    .logo-text {
+      font-size: 24px;
+      color: #225B7D;
+      font-weight: normal;
+    }
+    
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 30px;
+    }
+    
+    nav a {
+      text-decoration: none;
+      color: #2A2520;
+      font-size: 18px;
+      position: relative;
+      padding-bottom: 5px;
+    }
+    
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background-color: #C1A87C;
+      opacity: 0.6;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .control-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #F5F2E9;
+      border: 1px solid #D6D0C4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    /* Hero section */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      text-align: center;
+      min-height: 600px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Background symbols */
+    .bg-symbol {
+      position: absolute;
+      opacity: 0.1;
+      color: #225B7D;
+      font-size: 120px;
+      z-index: -1;
+    }
+    
+    .bg-symbol-1 {
+      top: 100px;
+      left: 200px;
+    }
+    
+    .bg-symbol-2 {
+      top: 300px;
+      right: 200px;
+    }
+    
+    .bg-symbol-3 {
+      bottom: 100px;
+      left: 300px;
+    }
+    
+    .bg-symbol-4 {
+      top: 150px;
+      right: 300px;
+    }
+    
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .hero-title {
+      font-size: 48px;
+      font-weight: normal;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+    
+    .divider {
+      width: 100px;
+      height: 2px;
+      background-color: #C1A87C;
+      margin: 30px auto;
+      position: relative;
+    }
+    
+    .divider::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #C1A87C;
+      top: -4px;
+      left: 45px;
+    }
+    
+    .hero-subtitle {
+      font-size: 18px;
+      color: #554F47;
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+    
+    /* Button styles with proper icon spacing */
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 40px 0;
+    }
+    
+    .button {
+      display: flex;
+      align-items: center;
+      padding: 15px 30px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 18px;
+      position: relative;
+      min-width: 220px;
+      justify-content: center;
+      transition: transform 0.3s;
+    }
+    
+    .button:hover {
+      transform: translateY(-3px);
+    }
+    
+    /* Primary button (blue) */
+    .primary-button {
+      background-color: #225B7D;
+      color: #F5F2E9;
+      border: none;
+    }
+    
+    /* Secondary button (outlined) */
+    .secondary-button {
+      background-color: transparent;
+      color: #225B7D;
+      border: 2px solid #225B7D;
+    }
+    
+    /* Icon styling - positioned with proper spacing */
+    .button-icon {
+      position: absolute;
+      left: 20px;
+    }
+    
+    /* Add padding to push text away from icon */
+    .button-text {
+      margin-left: 15px;
+    }
+    
+    /* Formula card styling */
+    .formula-container {
+      max-width: 600px;
+      margin: 40px auto;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .formula-card {
+      background-color: #F5F2E9;
+      border: 1px solid #D6D0C4;
+      border-radius: 5px;
+      padding: 30px 40px;
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+    
+    /* Vertical blue line on left */
+    .formula-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 4px;
+      background-color: #225B7D;
+    }
+    
+    .formula {
+      font-size: 24px;
+      margin-bottom: 15px;
+      font-family: Georgia, serif;
+    }
+    
+    .formula-caption {
+      font-style: italic;
+      color: #837D75;
+      font-size: 16px;
+    }
+    
+    .visualization {
+      position: absolute;
+      top: 200px;
+      right: 100px;
+      width: 300px;
+      height: 300px;
+      background-color: #F5F2E9;
+      border: 1px solid #D6D0C4;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Features section */
+    .features {
+      padding: 80px 20px;
+      background-color: #F0EBE1;
+      border-top: 5px solid #D6D0C4;
+      border-bottom: 5px solid #D6D0C4;
+      text-align: center;
+    }
+    
+    .section-title {
+      font-size: 36px;
+      color: #2A2520;
+      margin-bottom: 10px;
+      font-weight: normal;
+    }
+    
+    .section-subtitle {
+      font-size: 18px;
+      color: #554F47;
+      max-width: 800px;
+      margin: 0 auto 60px;
+    }
+    
+    .feature-cards {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .feature-card {
+      background-color: #F5F2E9;
+      border: 1px solid #D6D0C4;
+      border-radius: 5px;
+      padding: 30px;
+      width: 300px;
+      height: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #F5F2E9;
+      border: 1px solid #225B7D;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    
+    .feature-icon::before {
+      content: '';
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: rgba(34, 91, 125, 0.05);
+      z-index: 0;
+    }
+    
+    .feature-title {
+      font-size: 24px;
+      color: #2A2520;
+      margin-bottom: 20px;
+      font-weight: normal;
+    }
+    
+    .feature-description {
+      font-size: 16px;
+      color: #554F47;
+      text-align: center;
+    }
+    
+    .feature-footer {
+      width: 80%;
+      height: 1px;
+      background-color: #D6D0C4;
+      margin-top: auto;
+      position: relative;
+    }
+    
+    .feature-footer::after {
+      content: '';
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #C1A87C;
+      top: -3px;
+      left: calc(50% - 3px);
+    }
+    
+    /* Customization section */
+    .customization {
+      padding: 80px 20px;
+      background: linear-gradient(to right, rgba(240, 235, 225, 0.8), rgba(245, 242, 233, 0.85), rgba(240, 235, 225, 0.8));
+      position: relative;
+      text-align: center;
+    }
+    
+    .custom-content {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      flex-wrap: wrap;
+      margin-top: 60px;
+    }
+    
+    .custom-visual {
+      width: 300px;
+      height: 300px;
+      background-color: #F0EBE1;
+      border: 1px solid #D6D0C4;
+      border-radius: 5px;
+      position: relative;
+    }
+    
+    .custom-visual-inner {
+      width: 280px;
+      height: 280px;
+      border: 1px dashed #D6D0C4;
+      border-radius: 3px;
+      margin: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .visual-control {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #F5F2E9;
+      border: 1px solid #225B7D;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .control-top {
+      top: -20px;
+      right: 20px;
+    }
+    
+    .control-middle {
+      right: -20px;
+      top: calc(50% - 20px);
+    }
+    
+    .control-bottom {
+      bottom: -20px;
+      right: 20px;
+    }
+    
+    .custom-options {
+      width: 350px;
+      background-color: #F5F2E9;
+      border: 1px solid #D6D0C4;
+      border-radius: 5px;
+      padding: 30px;
+      text-align: left;
+    }
+    
+    .options-title {
+      font-size: 20px;
+      color: #2A2520;
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: normal;
+      position: relative;
+    }
+    
+    .options-divider {
+      width: 80%;
+      height: 1px;
+      background-color: #C1A87C;
+      margin: 0 auto 30px;
+    }
+    
+    .option {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    
+    .option-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #F0EBE1;
+      border: 1px solid #225B7D;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 20px;
+      flex-shrink: 0;
+    }
+    
+    .option-text {
+      flex: 1;
+    }
+    
+    .option-title {
+      font-size: 16px;
+      color: #2A2520;
+      margin-bottom: 5px;
+      font-weight: normal;
+    }
+    
+    .option-description {
+      font-size: 14px;
+      color: #554F47;
+    }
+    
+    .options-footer {
+      width: 80%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #C1A87C, transparent);
+      margin: 20px auto 0;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+      .visualization {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin: 30px auto;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        padding: 20px;
+      }
+      
+      .logo-container {
+        margin-bottom: 20px;
+      }
+      
+      nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+      }
+      
+      .controls {
+        margin-top: 20px;
+      }
+      
+      .hero-title {
+        font-size: 36px;
+      }
+      
+      .button-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+      
+      .formula-card {
+        width: 100%;
+        max-width: 350px;
+        padding: 20px;
+      }
+      
+      .formula {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header with navigation -->
+  <header>
+    <div class="logo-container">
+      <svg class="logo" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#225B7D" stroke-width="2"/>
+        <line x1="10" y1="50" x2="90" y2="50" stroke="#225B7D" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="10" x2="50" y2="90" stroke="#225B7D" stroke-width="2" stroke-linecap="round"/>
+        <path d="M90 50C90 28 72 10 50 10C28 10 10 28 10 50" stroke="#225B7D" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h1 class="logo-text">Calculus Visualizer</h1>
+    </div>
+    
+    <nav>
+      <ul>
+        <li>
+          <a href="#derivatives" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24">
+              <rect x="5" y="5" width="6" height="6" fill="#225B7D"/>
+              <rect x="13" y="5" width="6" height="6" fill="#225B7D"/>
+              <rect x="5" y="13" width="6" height="6" fill="#225B7D"/>
+              <rect x="13" y="13" width="6" height="6" fill="#225B7D"/>
+            </svg>
+            Derivatives
+          </a>
+        </li>
+        <li>
+          <a href="#integrals" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M8 4C6 4 6 20 8 20" stroke="#225B7D" stroke-width="2" fill="none"/>
+            </svg>
+            Integrals
+          </a>
+        </li>
+        <li>
+          <a href="#limits" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M6 7V17M18 7V17M6 12H18" stroke="#225B7D" stroke-width="2"/>
+            </svg>
+            Limits
+          </a>
+        </li>
+        <li>
+          <a href="#vector-calculus" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6L18 18M12 4V20" stroke="#225B7D" stroke-width="2"/>
+            </svg>
+            Vector Calculus
+          </a>
+        </li>
+      </ul>
+    </nav>
+    
+    <div class="controls">
+      <button class="control-button theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path d="M12 4V2M12 22v-2M4 12H2m20 0h-2m-2.5-5.5L18 5M6 19l1.5-1.5M6 5l1.5 1.5m11 11L18 19M12 17a5 5 0 100-10 5 5 0 000 10z" 
+                stroke="#225B7D" stroke-width="1.5" fill="none"/>
+        </svg>
+      </button>
+      <button class="control-button settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <circle cx="12" cy="12" r="3" stroke="#225B7D" stroke-width="1.5" fill="none"/>
+          <path d="M12 2v4m0 12v4m10-10h-4m-16 0h4m14-7l-3.5 3.5m-11 11L5 16M5 5l3.5 3.5m11 11L16 16" 
+                stroke="#225B7D" stroke-width="1.5"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero section -->
+  <section class="hero">
+    <!-- Background mathematical symbols -->
+    <div class="bg-symbol bg-symbol-1">∫</div>
+    <div class="bg-symbol bg-symbol-2">∂</div>
+    <div class="bg-symbol bg-symbol-3">lim</div>
+    <div class="bg-symbol bg-symbol-4">∇</div>
+    
+    <div class="hero-content">
+      <h2 class="hero-title">The Timeless Art of Calculus Visualization</h2>
+      
+      <div class="divider"></div>
+      
+      <p class="hero-subtitle">
+        Experience the elegant harmony of mathematics through interactive visualizations 
+        that bring calculus concepts to life with classical precision and beauty.
+      </p>
+      
+      <!-- Buttons with properly spaced icons -->
+      <div class="button-container">
+        <a href="#begin" class="button primary-button">
+          <svg class="button-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="button-text">Begin Your Journey</span>
+        </a>
+        <a href="#explore" class="button secondary-button">
+          <svg class="button-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="button-text">Explore the Method</span>
+        </a>
+      </div>
+      
+      <!-- Improved formula card -->
+      <div class="formula-container">
+        <div class="formula-card">
+          <div class="formula">f'(x) = lim<sub>h→0</sub> (f(x+h) - f(x))/h</div>
+          <div class="formula-caption">The Derivative Definition</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features section -->
+  <section class="features">
+    <h2 class="section-title">Discover Mathematical Elegance Through Visual Narrative</h2>
+    <div class="divider"></div>
+    <p class="section-subtitle">
+      Our visualizations bridge the gap between abstract mathematical concepts and intuitive understanding,
+      creating a harmonious balance between form and function.
+    </p>
+    
+    <div class="feature-cards">
+      <!-- Feature 1 -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 50 50" width="40" height="40">
+            <circle cx="25" cy="25" r="15" fill="none" stroke="#225B7D" stroke-width="2"/>
+            <line x1="15" y1="25" x2="35" y2="25" stroke="#225B7D" stroke-width="2"/>
+            <line x1="25" y1="15" x2="25" y2="35" stroke="#225B7D" stroke-width="2"/>
+            <path d="M25 10A15 15 0 0 1 40 25" fill="none" stroke="#225B7D" stroke-width="2"/>
+            
+            <!-- 3D cube overlay -->
+            <path d="M20,20 L30,20 L30,30 L20,30 Z" fill="none" stroke="#225B7D" stroke-width="1"/>
+            <path d="M23,17 L33,17 L33,27 L23,27 Z" fill="none" stroke="#225B7D" stroke-width="1"/>
+            <line x1="20" y1="20" x2="23" y2="17" stroke="#225B7D" stroke-width="1"/>
+            <line x1="30" y1="20" x2="33" y2="17" stroke="#225B7D" stroke-width="1"/>
+            <line x1="30" y1="30" x2="33" y2="27" stroke="#225B7D" stroke-width="1"/>
+            <line x1="20" y1="30" x2="23" y2="27" stroke="#225B7D" stroke-width="1"/>
+          </svg>
+        </div>
+        
+        <h3 class="feature-title">Dimensional Harmony</h3>
+        
+        <p class="feature-description">
+          Explore mathematical concepts through interactive 3D models that respond to your guidance, 
+          revealing the underlying proportions and relationships with classical clarity.
+        </p>
+        
+        <div class="feature-footer"></div>
+      </div>
+      
+      <!-- Feature 2 -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 50 50" width="40" height="40">
+            <path d="M10 20L40 30L10 40L40 50Z" fill="none" stroke="#225B7D" stroke-width="2"/>
+            <line x1="18" y1="10" x2="18" y2="40" stroke="#225B7D" stroke-width="2"/>
+            <line x1="32" y1="10" x2="32" y2="40" stroke="#225B7D" stroke-width="2"/>
+            
+            <!-- Nature icon overlay -->
+            <path d="M25 15C20 15 15 25 15 30C15 35 20 40 25 40C30 40 35 35 35 30C35 25 30 15 25 15Z" fill="none" stroke="#225B7D" stroke-width="1"/>
+            <line x1="25" y1="40" x2="25" y2="45" stroke="#225B7D" stroke-width="1"/>
+          </svg>
+        </div>
+        
+        <h3 class="feature-title">Natural Applications</h3>
+        
+        <p class="feature-description">
+          Witness how calculus principles apply to physics, engineering, and natural phenomena 
+          through examples that demonstrate the timeless relationship between mathematics and the world.
+        </p>
+        
+        <div class="feature-footer"></div>
+      </div>
+      
+      <!-- Feature 3 -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 50 50" width="40" height="40">
+            <rect x="10" y="10" width="30" height="30" fill="none" stroke="#225B7D" stroke-width="2"/>
+            <path d="M18 25L22 20L28 25L32 20" fill="none" stroke="#225B7D" stroke-width="2"/>
+            
+            <!-- Compass icon overlay -->
+            <circle cx="25" cy="25" r="10" fill="none" stroke="#225B7D" stroke-width="1"/>
+            <path d="M25 15L25 17M25 33L25 35M15 25L17 25M33 25L35 25" stroke="#225B7D" stroke-width="1"/>
+            <line x1="25" y1="25" x2="32" y2="22" stroke="#225B7D" stroke-width="1.5"/>
+            <line x1="25" y1="25" x2="20" y2="30" stroke="#225B7D" stroke-width="1"/>
+          </svg>
+        </div>
+        
+        <h3 class="feature-title">Guided Discovery</h3>
+        
+        <p class="feature-description">
+          Build understanding through narrative progression that reveals complex concepts gradually, 
+          allowing intuitive comprehension to develop naturally through visual exploration.
+        </p>
+        
+        <div class="feature-footer"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Customization section -->
+  <section class="customization">
+    <h2 class="section-title">Personalize Your Mathematical Journey</h2>
+    <div class="divider"></div>
+    <p class="section-subtitle">
+      Adapt the learning experience to match your personal preferences with 
+      customizable parameters, presentation styles, and visualization settings.
+    </p>
+    
+    <div class="custom-content">
+      <!-- Visualization preview -->
+      <div class="custom-visual">
+        <div class="custom-visual-inner">
+          <svg viewBox="0 0 200 200" width="200" height="200">
+            <circle cx="100" cy="100" r="80" fill="#F5F2E9" stroke="#225B7D" stroke-width="1"/>
+            <path d="M30 100L170 100M100 30L100 170" stroke="#225B7D" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="40" fill="none" stroke="#225B7D" stroke-width="2"/>
+          </svg>
+        </div>
+        
+        <!-- Control buttons -->
+        <div class="visual-control control-top">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M12 6v12M6 12h12" stroke="#225B7D" stroke-width="2"/>
+          </svg>
+        </div>
+        
+        <div class="visual-control control-middle">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M6 6l12 12M6 18L18 6" stroke="#225B7D" stroke-width="2"/>
+          </svg>
+        </div>
+        
+        <div class="visual-control control-bottom">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M6 12h12" stroke="#225B7D" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      
+      <!-- Customization options -->
+      <div class="custom-options">
+        <h3 class="options-title">Customization Options</h3>
+        <div class="options-divider"></div>
+        
+        <!-- Option 1 -->
+        <div class="option">
+          <div class="option-icon">
+            <svg viewBox="0 0 24 24" width="15" height="15">
+              <rect x="6" y="10" width="12" height="4" rx="2" fill="#F0EBE1" stroke="#225B7D" stroke-width="1.5"/>
+              <circle cx="14" cy="12" r="2" fill="#225B7D"/>
+            </svg>
+          </div>
+          <div class="option-text">
+            <h4 class="option-title">Adjustable Parameters</h4>
+            <p class="option-description">Control visualization complexity</p>
+          </div>
+        </div>
+        
+        <!-- Option 2 -->
+        <div class="option">
+          <div class="option-icon">
+            <svg viewBox="0 0 24 24" width="15" height="15">
+              <path d="M12 6C8 6 6 12 12 18C18 12 16 6 12 6Z" fill="none" stroke="#225B7D" stroke-width="1.5"/>
+              <circle cx="9" cy="10" r="1.5" fill="#225B7D"/>
+              <circle cx="15" cy="10" r="1.5" fill="#225B7D"/>
+              <circle cx="12" cy="14" r="1.5" fill="#225B7D"/>
+            </svg>
+          </div>
+          <div class="option-text">
+            <h4 class="option-title">Visual Themes</h4>
+            <p class="option-description">Choose your aesthetic style</p>
+          </div>
+        </div>
+        
+        <!-- Option 3 -->
+        <div class="option">
+          <div class="option-icon">
+            <svg viewBox="0 0 24 24" width="15" height="15">
+              <circle cx="12" cy="12" r="6" fill="none" stroke="#225B7D" stroke-width="1.5"/>
+              <path d="M12 8v4l3 2" stroke="#225B7D" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="option-text">
+            <h4 class="option-title">Narrative Pacing</h4>
+            <p class="option-description">Set your learning rhythm</p>
+          </div>
+        </div>
+        
+        <div class="options-footer"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Theme toggle
+      const themeToggle = document.querySelector('.theme-toggle');
+      themeToggle.addEventListener('click', function() {
+        document.body.classList.toggle('dark-theme');
+      });
+      
+      // Feature card hover effects
+      const featureCards = document.querySelectorAll('.feature-card');
+      featureCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+          this.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.05)';
+        });
+        card.addEventListener('mouseleave', function() {
+          this.style.boxShadow = 'none';
+        });
+      });
+      
+      // Simple responsive adjustments
+      function handleResize() {
+        if (window.innerWidth <= 768) {
+          document.querySelectorAll('.nav-item svg').forEach(icon => {
+            icon.style.width = '16px';
+            icon.style.height = '16px';
+          });
+        } else {
+          document.querySelectorAll('.nav-item svg').forEach(icon => {
+            icon.style.width = '18px';
+            icon.style.height = '18px';
+          });
+        }
+      }
+      
+      // Initial call and resize listener
+      handleResize();
+      window.addEventListener('resize', handleResize);
+    });
+  </script>
+</body>
+</html>
