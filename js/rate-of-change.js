@@ -1,713 +1,1177 @@
 /**
- * Rate of Change Visualization
- * Interactive visualization demonstrating derivative concepts
+ * Rate of Change Visualizer
+ * Interactive SVG visualization for teaching derivatives with surreal animations and pseudo-3D effects
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize KaTeX for the formula
-  renderFormula();
-  
-  // Setup tooltip functionality for term definitions
-  setupTermHighlights();
-  
-  // Initialize the 3D visualization
-  initVisualization();
-});
-
-/**
- * Render the mathematical formula using KaTeX
- */
-function renderFormula() {
-  const formulaElement = document.getElementById('derivative-formula');
-  const formula = "f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}";
-  
-  katex.render(formula, formulaElement, {
-    throwOnError: false,
-    displayMode: true
-  });
-}
-
-/**
- * Setup interactive term highlights with tooltips
- */
-function setupTermHighlights() {
-  const terms = document.querySelectorAll('.highlight-term');
-  
-  terms.forEach(term => {
-    term.addEventListener('mouseenter', showDefinition);
-    term.addEventListener('mouseleave', hideDefinition);
-  });
-}
-
-function showDefinition(event) {
-  const term = event.target;
-  const definition = term.getAttribute('data-definition');
-  
-  const tooltip = document.createElement('div');
-  tooltip.className = 'definition-tooltip';
-  tooltip.textContent = definition;
-  
-  // Position tooltip
-  const rect = term.getBoundingClientRect();
-  tooltip.style.left = `${rect.left}px`;
-  tooltip.style.top = `${rect.bottom + 5}px`;
-  
-  document.body.appendChild(tooltip);
-  term.setAttribute('data-tooltip-id', Date.now());
-  tooltip.id = term.getAttribute('data-tooltip-id');
-}
-
-function hideDefinition(event) {
-  const term = event.target;
-  const tooltipId = term.getAttribute('data-tooltip-id');
-  const tooltip = document.getElementById(tooltipId);
-  
-  if (tooltip) {
-    tooltip.remove();
-  }
-}
-
-/**
- * Initialize the visualization and controls
- */
-function initVisualization() {
-  const container = document.getElementById('visualization-canvas');
-  const viz = new RateOfChangeVisualization(container);
-  
-  // Setup slider controls
-  const speedSlider = document.getElementById('speed-slider');
-  const speedValue = document.getElementById('speed-value');
-  
-  speedSlider.addEventListener('input', function() {
-    const speed = parseFloat(this.value);
-    speedValue.textContent = speed.toFixed(1);
-    viz.setSpeed(speed);
-  });
-  
-  const intervalSlider = document.getElementById('interval-slider');
-  const intervalValue = document.getElementById('interval-value');
-  
-  intervalSlider.addEventListener('input', function() {
-    const interval = parseFloat(this.value);
-    intervalValue.textContent = interval.toFixed(1);
-    viz.setTimeInterval(interval);
-  });
-  
-  // Setup play/pause button
-  const playPauseButton = document.getElementById('play-pause');
-  playPauseButton.addEventListener('click', function() {
-    const isPlaying = viz.togglePlay();
-    
-    if (isPlaying) {
-      this.innerHTML = `
-        <svg viewBox="0 0 24 24" width="20" height="20">
-          <rect x="6" y="4" width="4" height="16" fill="#225B7D"/>
-          <rect x="14" y="4" width="4" height="16" fill="#225B7D"/>
-        </svg>
-      `;
-    } else {
-      this.innerHTML = `
-        <svg viewBox="0 0 24 24" width="20" height="20">
-          <path d="M8 5v14l11-7z" fill="#225B7D"/>
-        </svg>
-      `;
-    }
-  });
-  
-  // Setup reset button
-  const resetButton = document.getElementById('reset');
-  resetButton.addEventListener('click', function() {
-    viz.reset();
-    
-    // Also reset to paused state
-    viz.state.playing = false;
-    playPauseButton.innerHTML = `
-      <svg viewBox="0 0 24 24" width="20" height="20">
-        <path d="M8 5v14l11-7z" fill="#225B7D"/>
-      </svg>
-    `;
-  });
-}
-
-/**
- * Visualization class for Rate of Change
- */
-class RateOfChangeVisualization {
-  constructor(container) {
-    // Visualization state
-    this.state = {
-      speed: 5.0,
-      timeInterval: 0.5,
-      playing: false,
-      time: 0
-    };
-    
-    // Setup Three.js scene
-    this.container = container;
-    this.setupScene();
-    this.setupCamera();
-    this.setupRenderer();
-    this.setupLights();
-    this.setupControls();
-    
-    // Create visualization objects
-    this.createRoad();
-    this.createVehicle();
-    this.createDistanceMarkers();
-    this.createGraph();
-    
-    // Start animation loop
-    this.animate();
-    
-    // Hide loading indicator
-    setTimeout(() => {
-      document.getElementById('loading-indicator').style.display = 'none';
-    }, 800);
-  }
-  
-  // Scene setup methods
-  setupScene() {
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xF0EBE1);
-    this.scene.fog = new THREE.Fog(0xF0EBE1, 30, 100);
-  }
-  
-  setupCamera() {
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
-    this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    this.camera.position.set(5, 8, 15);
-    this.camera.lookAt(0, 0, 0);
-  }
-  
-  setupRenderer() {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.container.appendChild(this.renderer.domElement);
-    
-    window.addEventListener('resize', () => this.handleResize());
-  }
-  
-  setupLights() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    this.scene.add(ambientLight);
-    
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(10, 20, 15);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.camera.near = 1;
-    directionalLight.shadow.camera.far = 50;
-    directionalLight.shadow.camera.left = -20;
-    directionalLight.shadow.camera.right = 20;
-    directionalLight.shadow.camera.top = 20;
-    directionalLight.shadow.camera.bottom = -20;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
-    this.scene.add(directionalLight);
-    
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-    fillLight.position.set(-10, 10, -10);
-    this.scene.add(fillLight);
-  }
-  
-  setupControls() {
-    this.cameraAngle = 0;
-    this.cameraHeight = 8;
-    this.cameraDistance = 15;
-    this.cameraTarget = new THREE.Vector3(0, 0, 0);
-    
-    this.updateCameraPosition();
-  }
-  
-  updateCameraPosition() {
-    const x = Math.sin(this.cameraAngle) * this.cameraDistance;
-    const z = Math.cos(this.cameraAngle) * this.cameraDistance;
-    
-    this.camera.position.set(x, this.cameraHeight, z);
-    this.camera.lookAt(this.cameraTarget);
-  }
-  
-  // Create scene objects
-  createRoad() {
-    const roadGeometry = new THREE.PlaneGeometry(100, 4);
-    const roadMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xE5E0D5,
-      side: THREE.DoubleSide
-    });
-    
-    this.road = new THREE.Mesh(roadGeometry, roadMaterial);
-    this.road.rotation.x = -Math.PI / 2;
-    this.road.position.y = -0.1;
-    this.road.receiveShadow = true;
-    this.scene.add(this.road);
-    
-    this.createRoadMarkings();
-    
-    const groundGeometry = new THREE.PlaneGeometry(200, 200);
-    const groundMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xD6D0C4,
-      side: THREE.DoubleSide
-    });
-    
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.15;
-    ground.receiveShadow = true;
-    this.scene.add(ground);
-  }
-  
-  createRoadMarkings() {
-    const centerLineGeometry = new THREE.PlaneGeometry(100, 0.1);
-    const centerLineMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0x225B7D,
-      side: THREE.DoubleSide
-    });
-    
-    const centerLine = new THREE.Mesh(centerLineGeometry, centerLineMaterial);
-    centerLine.rotation.x = -Math.PI / 2;
-    centerLine.position.y = -0.05;
-    this.scene.add(centerLine);
-    
-    for (let i = -1; i <= 1; i += 2) {
-      const edgeLineGeometry = new THREE.PlaneGeometry(100, 0.1);
-      const edgeLineMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0x2A2520,
-        side: THREE.DoubleSide
-      });
-      
-      const edgeLine = new THREE.Mesh(edgeLineGeometry, edgeLineMaterial);
-      edgeLine.rotation.x = -Math.PI / 2;
-      edgeLine.position.y = -0.05;
-      edgeLine.position.z = i * 1.95;
-      this.scene.add(edgeLine);
-    }
-  }
-  
-  createVehicle() {
-    this.vehicle = new THREE.Group();
-    
-    const bodyGeometry = new THREE.BoxGeometry(2, 0.8, 1);
-    const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x225B7D });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.position.y = 0.5;
-    body.castShadow = true;
-    this.vehicle.add(body);
-    
-    const cabinGeometry = new THREE.BoxGeometry(1, 0.6, 0.8);
-    const cabinMaterial = new THREE.MeshPhongMaterial({ color: 0x1A4B68 });
-    const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
-    cabin.position.y = 0.9;
-    cabin.position.x = -0.2;
-    cabin.castShadow = true;
-    this.vehicle.add(cabin);
-    
-    const windowMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xE5E0D5,
-      shininess: 100 
-    });
-    
-    const frontWindowGeometry = new THREE.PlaneGeometry(0.4, 0.4);
-    const frontWindow = new THREE.Mesh(frontWindowGeometry, windowMaterial);
-    frontWindow.position.set(0.3, 0.9, 0);
-    frontWindow.rotation.y = Math.PI / 2;
-    this.vehicle.add(frontWindow);
-    
-    for (let i = -1; i <= 1; i += 2) {
-      const sideWindowGeometry = new THREE.PlaneGeometry(0.8, 0.4);
-      const sideWindow = new THREE.Mesh(sideWindowGeometry, windowMaterial);
-      sideWindow.position.set(-0.2, 0.9, i * 0.4);
-      sideWindow.rotation.y = i * Math.PI / 2;
-      this.vehicle.add(sideWindow);
+class RateOfChangeVisualizer {
+    constructor(container) {
+        this.container = container;
+        this.width = 800;
+        this.height = 2400;
+        this.currentTopic = 'amount';
+        
+        // State
+        this.state = {
+            depth: 0,
+            rotation: 0,
+            showTangent: true,
+            showSecant: true,
+            timeInterval: 0.5,
+            isAnimating: false,
+            clickedTopics: {}
+        };
+        
+        // Colors
+        this.colors = {
+            background: '#F0EBE1',
+            teal: '#225B7D',
+            brown: '#2A2520',
+            gray: '#554F47',
+            tan: '#C1A87C',
+            lightGray: '#D6D0C4',
+            white: '#FFFFFF'
+        };
+        
+        // Initialize SVG
+        this.initSVG();
+        
+        // Create background animations
+        this.createBackground();
+        
+        // Create header
+        this.createHeader();
+        
+        // Create title section
+        this.createTitleSection();
+        
+        // Create main content
+        this.createContentArea();
+        
+        // Create sliders
+        this.createSliderSection();
+        
+        // Create practice exercises
+        this.createExerciseSection();
+        
+        // Create footer
+        this.createFooter();
+        
+        // Setup interactive elements
+        this.setupInteractivity();
+        
+        // Initial state
+        this.updateDepthEffect();
+        this.updateRotationEffect();
+        
+        // Start background animations
+        this.startBackgroundAnimations();
     }
     
-    const wheelGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
-    const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x2A2520 });
-    
-    const wheelPositions = [
-      { x: 0.7, z: 0.6 },
-      { x: 0.7, z: -0.6 },
-      { x: -0.7, z: 0.6 },
-      { x: -0.7, z: -0.6 }
-    ];
-    
-    wheelPositions.forEach(pos => {
-      const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-      wheel.position.set(pos.x, 0.3, pos.z);
-      wheel.rotation.z = Math.PI / 2;
-      wheel.castShadow = true;
-      this.vehicle.add(wheel);
-    });
-    
-    this.vehicle.position.x = -20;
-    this.scene.add(this.vehicle);
-    
-    this.createVehicleTrail();
-  }
-  
-  createVehicleTrail() {
-    this.trailPoints = [];
-    
-    const trailMaterial = new THREE.LineBasicMaterial({ 
-      color: 0x225B7D,
-      transparent: true,
-      opacity: 0.6 
-    });
-    
-    const trailGeometry = new THREE.BufferGeometry();
-    
-    this.trail = new THREE.Line(trailGeometry, trailMaterial);
-    this.scene.add(this.trail);
-  }
-  
-  createDistanceMarkers() {
-    this.markers = new THREE.Group();
-    
-    for (let x = -20; x <= 20; x += 5) {
-      const postGeometry = new THREE.BoxGeometry(0.2, 1, 0.2);
-      const postMaterial = new THREE.MeshPhongMaterial({ color: 0x554F47 });
-      const post = new THREE.Mesh(postGeometry, postMaterial);
-      post.position.set(x, 0.5, 2.5);
-      post.castShadow = true;
-      this.markers.add(post);
-      
-      const distance = Math.abs(x);
-      const indicatorGeometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-      const indicatorMaterial = new THREE.MeshPhongMaterial({ 
-        color: distance % 10 === 0 ? 0x225B7D : 0x554F47 
-      });
-      const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
-      indicator.position.set(x, 1.2, 2.5);
-      indicator.castShadow = true;
-      this.markers.add(indicator);
+    /**
+     * Initialize the SVG Canvas
+     */
+    initSVG() {
+        // Create SVG drawing
+        this.svg = SVG().addTo(this.container).size(this.width, this.height);
+        
+        // Create a background
+        this.svgBackground = this.svg.rect(this.width, this.height).fill(this.colors.background);
     }
     
-    this.scene.add(this.markers);
-    
-    this.createIntervalMarker();
-  }
-  
-  createIntervalMarker() {
-    this.intervalMarker = new THREE.Group();
-    
-    const postGeometry = new THREE.BoxGeometry(0.1, 2, 0.1);
-    const postMaterial = new THREE.MeshPhongMaterial({ 
-      color: 0xC1A87C,
-      transparent: true,
-      opacity: 0.8
-    });
-    const post = new THREE.Mesh(postGeometry, postMaterial);
-    post.position.y = 1;
-    this.intervalMarker.add(post);
-    
-    const barGeometry = new THREE.BoxGeometry(0.5, 0.1, 0.1);
-    const barMaterial = new THREE.MeshPhongMaterial({ color: 0xC1A87C });
-    const bar = new THREE.Mesh(barGeometry, barMaterial);
-    bar.position.y = 2;
-    this.intervalMarker.add(bar);
-    
-    this.scene.add(this.intervalMarker);
-    
-    this.createIntervalLine();
-  }
-  
-  createIntervalLine() {
-    const lineMaterial = new THREE.LineDashedMaterial({
-      color: 0xC1A87C,
-      dashSize: 0.3,
-      gapSize: 0.1,
-      linewidth: 1
-    });
-    
-    const lineGeometry = new THREE.BufferGeometry();
-    const linePoints = [
-      new THREE.Vector3(0, 0.5, 0),
-      new THREE.Vector3(0, 0.5, 0)
-    ];
-    lineGeometry.setFromPoints(linePoints);
-    
-    this.intervalLine = new THREE.Line(lineGeometry, lineMaterial);
-    this.intervalLine.computeLineDistances();
-    this.scene.add(this.intervalLine);
-  }
-  
-  createGraph() {
-    this.graph = new THREE.Group();
-    
-    const backgroundGeometry = new THREE.PlaneGeometry(8, 5);
-    const backgroundMaterial = new THREE.MeshPhongMaterial({
-      color: 0xF5F2E9,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.9
-    });
-    const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
-    this.graph.add(background);
-    
-    const axesMaterial = new THREE.LineBasicMaterial({ color: 0x2A2520 });
-    
-    const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-3.9, -2.4, 0.01),
-      new THREE.Vector3(3.9, -2.4, 0.01)
-    ]);
-    const xAxis = new THREE.Line(xAxisGeometry, axesMaterial);
-    this.graph.add(xAxis);
-    
-    const yAxisGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-3.9, -2.4, 0.01),
-      new THREE.Vector3(-3.9, 2.4, 0.01)
-    ]);
-    const yAxis = new THREE.Line(yAxisGeometry, axesMaterial);
-    this.graph.add(yAxis);
-    
-    const gridMaterial = new THREE.LineDashedMaterial({
-      color: 0xD6D0C4,
-      dashSize: 0.2,
-      gapSize: 0.1
-    });
-    
-    for (let x = -3; x <= 3; x++) {
-      if (x === 0) continue;
-      
-      const gridGeometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(x, -2.4, 0.01),
-        new THREE.Vector3(x, 2.4, 0.01)
-      ]);
-      const grid = new THREE.Line(gridGeometry, gridMaterial);
-      grid.computeLineDistances();
-      this.graph.add(grid);
+    /**
+     * Create surreal background with floating math symbols
+     */
+    createBackground() {
+        // Create a group for background symbols
+        this.backgroundGroup = this.svg.group();
+        
+        // Define math symbols to float in background
+        const symbols = [
+            'f′', '∫', '∂', 'dx', '∑', '→', 'Δ', '∞', 'lim'
+        ];
+        
+        // Create 20 random symbols
+        for (let i = 0; i < 20; i++) {
+            const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+            const x = Math.random() * this.width;
+            const y = Math.random() * this.height;
+            const opacity = 0.05 + Math.random() * 0.1;
+            const size = 20 + Math.random() * 60;
+            
+            const textElement = this.backgroundGroup.text(symbol)
+                .font({
+                    family: 'Georgia',
+                    size: size,
+                    anchor: 'middle',
+                    weight: 'bold'
+                })
+                .fill({ color: this.colors.teal, opacity: opacity })
+                .move(x, y);
+                
+            // Store for animation
+            textElement.data({
+                originalX: x,
+                originalY: y,
+                speedX: Math.random() * 0.5 - 0.25,
+                speedY: -0.1 - Math.random() * 0.5,
+                opacity: opacity,
+                opacityDir: Math.random() > 0.5 ? 1 : -1
+            });
+        }
     }
     
-    for (let y = -2; y <= 2; y++) {
-      if (y === 0) continue;
-      
-      const gridGeometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-3.9, y, 0.01),
-        new THREE.Vector3(3.9, y, 0.01)
-      ]);
-      const grid = new THREE.Line(gridGeometry, gridMaterial);
-      grid.computeLineDistances();
-      this.graph.add(grid);
+    /**
+     * Create header section
+     */
+    createHeader() {
+        // Header rectangle
+        this.headerGroup = this.svg.group();
+        this.headerRect = this.headerGroup.rect(this.width, 80)
+            .fill(this.colors.background)
+            .stroke({ color: this.colors.lightGray, width: 1 });
+        
+        // Logo
+        const logoGroup = this.headerGroup.group();
+        const logoCircle = logoGroup.circle(40)
+            .fill('none')
+            .stroke({ color: this.colors.teal, width: 2 })
+            .move(30, 20);
+        
+        // Logo lines
+        logoGroup.line(30, 40, 70, 40).stroke({ color: this.colors.teal, width: 2 });
+        logoGroup.line(50, 20, 50, 60).stroke({ color: this.colors.teal, width: 2 });
+        logoGroup.path('M40,30 A10,10 0 0 1 60,30')
+            .fill('none')
+            .stroke({ color: this.colors.teal, width: 2 });
+        
+        // Title
+        this.headerGroup.text('Calculus Visualizer')
+            .font({
+                family: 'Georgia',
+                size: 24,
+                anchor: 'start'
+            })
+            .fill(this.colors.teal)
+            .move(85, 30);
+        
+        // Navigation buttons
+        const navContainer = this.headerGroup.rect(280, 40)
+            .radius(4)
+            .fill('none')
+            .stroke({ color: this.colors.lightGray, width: 1 })
+            .move(480, 20);
+        
+        // Active "Derivatives" button
+        const derivativesBtn = this.headerGroup.rect(70, 30)
+            .radius(4)
+            .fill(this.colors.teal)
+            .move(490, 25);
+        
+        this.headerGroup.text('Derivatives')
+            .font({
+                family: 'Arial',
+                size: 12,
+                anchor: 'middle',
+                weight: 'normal'
+            })
+            .fill(this.colors.white)
+            .move(525, 33);
+        
+        // Other nav buttons
+        const navLabels = ['Integrals', 'Limits', 'Vectors'];
+        
+        navLabels.forEach((label, index) => {
+            const x = 570 + index * 60;
+            
+            this.headerGroup.rect(55, 30)
+                .radius(4)
+                .fill('none')
+                .stroke({ color: this.colors.lightGray, width: 1 })
+                .move(x, 25);
+                
+            this.headerGroup.text(label)
+                .font({
+                    family: 'Arial',
+                    size: 12,
+                    anchor: 'middle',
+                    weight: 'normal'
+                })
+                .fill(this.colors.brown)
+                .move(x + 27, 33);
+        });
+        
+        // Back button
+        const backBtn = this.headerGroup.rect(50, 30)
+            .radius(4)
+            .fill('none')
+            .stroke({ color: this.colors.teal, width: 1 })
+            .move(400, 25);
+            
+        this.headerGroup.text('Back')
+            .font({
+                family: 'Arial',
+                size: 12,
+                anchor: 'middle',
+                weight: 'normal'
+            })
+            .fill(this.colors.teal)
+            .move(425, 33);
+            
+        // Animate logo
+        this.animateLogo(logoCircle);
     }
     
-    const plotMaterial = new THREE.LineBasicMaterial({ 
-      color: 0x225B7D,
-      linewidth: 2
-    });
-    
-    this.plotGeometry = new THREE.BufferGeometry();
-    this.plotLine = new THREE.Line(this.plotGeometry, plotMaterial);
-    this.graph.add(this.plotLine);
-    
-    this.createGraphInterval();
-    
-    this.graph.position.set(10, 8, 5);
-    this.graph.rotation.y = -Math.PI / 4;
-    this.scene.add(this.graph);
-  }
-  
-  createGraphInterval() {
-    const intervalMaterial = new THREE.MeshBasicMaterial({ color: 0xC1A87C });
-    
-    const currentPointGeometry = new THREE.CircleGeometry(0.1, 16);
-    this.currentPoint = new THREE.Mesh(currentPointGeometry, intervalMaterial);
-    this.currentPoint.position.z = 0.02;
-    this.graph.add(this.currentPoint);
-    
-    const intervalPointGeometry = new THREE.CircleGeometry(0.1, 16);
-    this.intervalPoint = new THREE.Mesh(intervalPointGeometry, intervalMaterial);
-    this.intervalPoint.position.z = 0.02;
-    this.graph.add(this.intervalPoint);
-    
-    const connectorMaterial = new THREE.LineDashedMaterial({
-      color: 0xC1A87C,
-      dashSize: 0.2,
-      gapSize: 0.1
-    });
-    
-    const connectorGeometry = new THREE.BufferGeometry();
-    this.intervalConnector = new THREE.Line(connectorGeometry, connectorMaterial);
-    this.intervalConnector.computeLineDistances();
-    this.graph.add(this.intervalConnector);
-    
-    const slopeMaterial = new THREE.LineBasicMaterial({ 
-      color: 0xC1A87C,
-      linewidth: 2
-    });
-    
-    const slopeGeometry = new THREE.BufferGeometry();
-    this.slopeLine = new THREE.Line(slopeGeometry, slopeMaterial);
-    this.graph.add(this.slopeLine);
-  }
-  
-  // Animation and update methods
-  update() {
-    if (this.state.playing) {
-      this.state.time += 0.016;
-      
-      if (this.vehicle.position.x > 20) {
-        this.state.time = 0;
-        this.vehicle.position.x = -20;
-        this.trailPoints = [];
-        this.updateTrail();
-      }
+    /**
+     * Create title and overview section
+     */
+    createTitleSection() {
+        this.titleGroup = this.svg.group().move(0, 100);
+        
+        // Title text
+        this.titleGroup.text('Derivatives: Rates of Change')
+            .font({
+                family: 'Georgia',
+                size: 32,
+                anchor: 'middle',
+                weight: 'bold'
+            })
+            .fill(this.colors.brown)
+            .move(this.width / 2, 0);
+        
+        // Decorative line
+        const lineWidth = 400;
+        const line = this.titleGroup.line(
+            this.width / 2 - lineWidth / 2, 60,
+            this.width / 2 + lineWidth / 2, 60
+        ).stroke({ 
+            color: this.colors.tan, 
+            width: 2,
+            dasharray: '8,4'
+        });
+        
+        // Center circle
+        const circle = this.titleGroup.circle(10)
+            .fill(this.colors.tan)
+            .move(this.width / 2 - 5, 55);
+        
+        // Overview text
+        const overviewTexts = [
+            'How quantities change over time or input',
+            'Click visualizations to explore in 3D-like depth',
+            'Key in physics, biology, economics, and more'
+        ];
+        
+        overviewTexts.forEach((text, index) => {
+            this.titleGroup.text(text)
+                .font({
+                    family: 'Georgia',
+                    size: 16,
+                    anchor: 'middle'
+                })
+                .fill(this.colors.gray)
+                .move(this.width / 2, 80 + index * 25);
+        });
+        
+        // Animate line and circle
+        this.animateTitleElements(line, circle);
     }
     
-    const newX = -20 + (this.state.time * this.state.speed);
-    this.vehicle.position.x = Math.min(newX, 20);
-    
-    this.vehicle.children.forEach(child => {
-      if (child.geometry && child.geometry.type === 'CylinderGeometry') {
-        child.rotation.x += this.state.playing ? 0.1 * this.state.speed : 0;
-      }
-    });
-    
-    if (this.state.playing || this.trailPoints.length === 0) {
-      this.trailPoints.push(new THREE.Vector3(
-        this.vehicle.position.x,
-        0.1,
-        this.vehicle.position.z
-      ));
-      
-      if (this.trailPoints.length > 100) {
-        this.trailPoints.shift();
-      }
-      
-      this.updateTrail();
+    /**
+     * Create main content area with derivative topics
+     */
+    createContentArea() {
+        // Main container
+        this.contentGroup = this.svg.group().move(50, 300);
+        
+        // Content rectangle
+        this.contentRect = this.contentGroup.rect(700, 1000)
+            .radius(10)
+            .fill(this.colors.background)
+            .stroke({ color: this.colors.lightGray, width: 1 });
+        
+        // Create topic sections
+        this.createTopicSection('amount', 0, 'Amount of Change', 'f(a + h) = f(a) + f\'(a)h', 'Click graph to see rate in 3D', 'Ex: f(3) = 2, f\'(3) = 5', 'f(3.2) ≈ 3');
+        this.createTopicSection('average-vs-instantaneous', 1, 'Average vs Instantaneous', 'Average: [f(a + h) - f(a)] / h', 'Click to tilt graph in 3D', 'Instantaneous: f\'(a)');
+        this.createTopicSection('motion', 2, 'Motion Along a Line', 'v(t) = s\'(t), a(t) = v\'(t)', 'Click to stretch path in 3D', 'Ex: s(t) = -16t^2 + 64');
+        this.createTopicSection('population', 3, 'Population Growth', 'P(t) + P\'(t)h', 'Click to see growth in 3D', 'Ex: P(2) ≈ 18,000');
+        this.createTopicSection('marginal', 4, 'Marginal Functions', 'MC(x) = C\'(x), MR(x) = R\'(x)', 'Click to rotate in 3D', 'Ex: MR(100) = 3');
     }
     
-    const intervalX = this.vehicle.position.x + (this.state.timeInterval * this.state.speed);
-    this.intervalMarker.position.x = Math.min(intervalX, 20);
-    
-    this.updateIntervalLine();
-    this.updateGraph();
-  }
-  
-  updateTrail() {
-    const trailGeometry = new THREE.BufferGeometry().setFromPoints(this.trailPoints);
-    this.trail.geometry.dispose();
-    this.trail.geometry = trailGeometry;
-  }
-  
-  updateIntervalLine() {
-    const linePoints = [
-      new THREE.Vector3(
-        this.vehicle.position.x,
-        0.5,
-        this.vehicle.position.z
-      ),
-      new THREE.Vector3(
-        this.intervalMarker.position.x,
-        0.5,
-        this.intervalMarker.position.z
-      )
-    ];
-    
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-    this.intervalLine.geometry.dispose();
-    this.intervalLine.geometry = lineGeometry;
-    this.intervalLine.computeLineDistances();
-  }
-  
-  updateGraph() {
-    const graphPoints = [];
-    const timeStart = Math.max(0, this.state.time - 3);
-    
-    for (let t = timeStart; t <= timeStart + 7; t += 0.1) {
-      const x = -3.9 + ((t - timeStart) / 7) * 7.8;
-      const distance = this.state.speed * t;
-      const y = -2.4 + (distance / 40) * 4.8;
-      
-      graphPoints.push(new THREE.Vector3(x, y, 0.02));
+    /**
+     * Create a topic section with visualization and explanation
+     */
+    createTopicSection(id, index, title, equation, instruction, example1, example2 = '') {
+        const yOffset = index * 200;
+        const sectionGroup = this.contentGroup.group().move(0, yOffset);
+        
+        // Left side (visualization)
+        const vizContainer = sectionGroup.rect(320, 180)
+            .radius(5)
+            .fill(this.colors.background)
+            .stroke({ color: this.colors.lightGray, width: 1 })
+            .move(0, 0);
+        
+        // Create visualization based on type
+        switch(id) {
+            case 'amount':
+                this.createAmountViz(sectionGroup);
+                break;
+            case 'average-vs-instantaneous':
+                this.createRateViz(sectionGroup);
+                break;
+            case 'motion':
+                this.createMotionViz(sectionGroup);
+                break;
+            case 'population':
+                this.createPopulationViz(sectionGroup);
+                break;
+            case 'marginal':
+                this.createMarginalViz(sectionGroup);
+                break;
+        }
+        
+        // Right side (explanation)
+        const expContainer = sectionGroup.rect(280, 180)
+            .radius(5)
+            .fill(this.colors.background)
+            .stroke({ color: this.colors.lightGray, width: 1 })
+            .move(340, 0);
+        
+        // Title
+        sectionGroup.text(`${index + 1}. ${title}`)
+            .font({
+                family: 'Georgia',
+                size: 18,
+                anchor: 'start',
+                weight: 'bold'
+            })
+            .fill(this.colors.brown)
+            .move(350, 20);
+        
+        // Equation
+        sectionGroup.text(equation)
+            .font({
+                family: 'Georgia',
+                size: 14,
+                anchor: 'start',
+                style: 'italic'
+            })
+            .fill(this.colors.brown)
+            .move(350, 50);
+        
+        // Instructions
+        sectionGroup.text(instruction)
+            .font({
+                family: 'Arial',
+                size: 12,
+                anchor: 'start'
+            })
+            .fill(this.colors.gray)
+            .move(350, 80);
+        
+        // Example 1
+        sectionGroup.text(example1)
+            .font({
+                family: 'Arial',
+                size: 12,
+                anchor: 'start'
+            })
+            .fill(this.colors.gray)
+            .move(350, 110);
+        
+        // Example 2 (if provided)
+        if (example2) {
+            sectionGroup.text(example2)
+                .font({
+                    family: 'Arial',
+                    size: 12,
+                    anchor: 'start'
+                })
+                .fill(this.colors.gray)
+                .move(350, 140);
+        }
+        
+        // Store reference to section for interactivity
+        this[`${id}Section`] = sectionGroup;
+        this[`${id}Viz`] = vizContainer;
+        
+        // Add click handlers
+        vizContainer.attr({ 'data-topic': id }).css({ cursor: 'pointer' });
     }
     
-    const plotGeometry = new THREE.BufferGeometry().setFromPoints(graphPoints);
-    this.plotLine.geometry.dispose();
-    this.plotLine.geometry = plotGeometry;
+    /**
+     * Create visualization for Amount of Change topic
+     */
+    createAmountViz(parent) {
+        const vizGroup = parent.group().move(20, 20);
+        
+        // Coordinate system
+        vizGroup.line(20, 140, 280, 140).stroke({ color: this.colors.gray, width: 1 }); // x-axis
+        vizGroup.line(40, 20, 40, 160).stroke({ color: this.colors.gray, width: 1 });   // y-axis
+        
+        // Curve (quadratic)
+        const curve = vizGroup.path('M40,140 Q160,40 280,100')
+            .fill('none')
+            .stroke({ color: this.colors.teal, width: 2 });
+        
+        // Tangent line
+        const tangent = vizGroup.line(120, 80, 200, 110)
+            .stroke({ 
+                color: this.colors.teal, 
+                width: 2,
+                dasharray: '5,3'
+            });
+        
+        // Secant line
+        const secant = vizGroup.line(80, 120, 240, 95)
+            .stroke({ color: this.colors.tan, width: 2 });
+        
+        // Point markers
+        vizGroup.circle(6).fill(this.colors.tan).center(80, 120);  // Start point
+        vizGroup.circle(6).fill(this.colors.tan).center(240, 95);  // End point
+        vizGroup.circle(6).fill(this.colors.teal).center(160, 80); // Tangent point
+        
+        // Store elements for animation
+        this.amountElements = { curve, tangent, secant };
+    }
     
-    const currentTimeRatio = (this.state.time - timeStart) / 7;
-    const currentX = -3.9 + currentTimeRatio * 7.8;
-    const currentY = -2.4 + (this.state.speed * this.state.time / 40) * 4.8;
+    /**
+     * Create visualization for Average vs Instantaneous Rate topic
+     */
+    createRateViz(parent) {
+        const vizGroup = parent.group().move(20, 20);
+        
+        // Coordinate system
+        vizGroup.line(20, 140, 280, 140).stroke({ color: this.colors.gray, width: 1 }); // x-axis
+        vizGroup.line(40, 20, 40, 160).stroke({ color: this.colors.gray, width: 1 });   // y-axis
+        
+        // Curve (cubic)
+        const curve = vizGroup.path('M40,120 C100,140 160,40 280,70')
+            .fill('none')
+            .stroke({ color: this.colors.teal, width: 2 });
+        
+        // Horizontal secant
+        const secant = vizGroup.line(80, 110, 240, 80)
+            .stroke({ color: this.colors.tan, width: 2 });
+            
+        // Vertical tangent
+        const tangent = vizGroup.line(160, 40, 160, 120)
+            .stroke({ 
+                color: this.colors.teal, 
+                width: 2,
+                dasharray: '5,3'
+            });
+        
+        // Point markers
+        vizGroup.circle(6).fill(this.colors.tan).center(80, 110);   // Start point
+        vizGroup.circle(6).fill(this.colors.tan).center(240, 80);   // End point
+        vizGroup.circle(6).fill(this.colors.teal).center(160, 80);  // Tangent point
+        
+        // Store elements for animation
+        this.rateElements = { curve, tangent, secant };
+    }
     
-    this.currentPoint.position.x = currentX;
-    this.currentPoint.position.y = currentY;
+    /**
+     * Create visualization for Motion Along a Line topic
+     */
+    createMotionViz(parent) {
+        const vizGroup = parent.group().move(20, 20);
+        
+        // Path line (horizontal axis)
+        vizGroup.line(40, 140, 280, 140)
+            .stroke({ color: this.colors.teal, width: 2 });
+        
+        // Wavy path above the line
+        const path = vizGroup.path('M40,120 C80,100 120,140 160,120 S240,100 280,120')
+            .fill('none')
+            .stroke({ color: this.colors.teal, width: 2 });
+        
+        // Moving object (circle)
+        const circle = vizGroup.circle(12)
+            .fill(this.colors.tan)
+            .center(160, 120);
+        
+        // Store elements for animation
+        this.motionElements = { path, circle };
+    }
     
-    const intervalTime = this.state.time + this.state.timeInterval;
-    const intervalTimeRatio = (intervalTime - timeStart) / 7;
-    const intervalX = -3.9 + intervalTimeRatio * 7.8;
-    const intervalY = -2.4 + (this.state.speed * intervalTime / 40) * 4.8;
+    /**
+     * Create visualization for Population Growth topic
+     */
+    createPopulationViz(parent) {
+        const vizGroup = parent.group().move(20, 20);
+        
+        // Coordinate system
+        vizGroup.line(20, 140, 280, 140).stroke({ color: this.colors.gray, width: 1 }); // x-axis
+        vizGroup.line(40, 20, 40, 160).stroke({ color: this.colors.gray, width: 1 });   // y-axis
+        
+        // Growth line
+        const line = vizGroup.line(40, 120, 280, 40)
+            .stroke({ color: this.colors.teal, width: 3 });
+        
+        // Tangent line
+        const tangent = vizGroup.line(160, 80, 280, 40)
+            .stroke({ 
+                color: this.colors.teal, 
+                width: 2,
+                dasharray: '5,3'
+            });
+        
+        // Point marker
+        vizGroup.circle(6).fill(this.colors.teal).center(160, 80);
+        
+        // Store elements for animation
+        this.populationElements = { line, tangent };
+    }
     
-    this.intervalPoint.position.x = intervalX;
-    this.intervalPoint.position.y = intervalY;
+    /**
+     * Create visualization for Marginal Functions topic
+     */
+    createMarginalViz(parent) {
+        const vizGroup = parent.group().move(20, 20);
+        
+        // Coordinate system
+        vizGroup.line(20, 140, 280, 140).stroke({ color: this.colors.gray, width: 1 }); // x-axis
+        vizGroup.line(40, 20, 40, 160).stroke({ color: this.colors.gray, width: 1 });   // y-axis
+        
+        // Quadratic curve
+        const curve = vizGroup.path('M40,60 Q160,140 280,40')
+            .fill('none')
+            .stroke({ color: this.colors.teal, width: 2 });
+        
+        // Vertical tangent line
+        const tangent = vizGroup.line(160, 60, 160, 140)
+            .stroke({ 
+                color: this.colors.teal, 
+                width: 2,
+                dasharray: '5,3'
+            });
+        
+        // Point marker
+        vizGroup.circle(6).fill(this.colors.teal).center(160, 100);
+        
+        // Store elements for animation
+        this.marginalElements = { curve, tangent };
+    }
     
-    const connectorPoints = [
-      new THREE.Vector3(currentX, currentY, 0.02),
-      new THREE.Vector3(intervalX, intervalY, 0.02)
-    ];
+    /**
+     * Create slider control section
+     */
+    createSliderSection() {
+        this.sliderGroup = this.svg.group().move(90, 1420);
+        
+        // Slider container
+        this.sliderGroup.rect(620, 120)
+            .radius(10)
+            .fill(this.colors.background)
+            .stroke({ color: this.colors.lightGray, width: 1 });
+        
+        // Depth slider
+        this.sliderGroup.text('Adjust Depth (Click Circle)')
+            .font({
+                family: 'Arial',
+                size: 14,
+                anchor: 'start'
+            })
+            .fill(this.colors.brown)
+            .move(30, 20);
+        
+        const depthTrack = this.sliderGroup.rect(250, 6)
+            .radius(3)
+            .fill('none')
+            .stroke({ color: this.colors.lightGray, width: 1 })
+            .move(30, 50);
+        
+        this.depthHandle = this.sliderGroup.circle(16)
+            .fill(this.colors.teal)
+            .center(155, 53);
+            
+        // Rotate slider
+        this.sliderGroup.text('Rotate View')
+            .font({
+                family: 'Arial',
+                size: 14,
+                anchor: 'start'
+            })
+            .fill(this.colors.brown)
+            .move(340, 20);
+        
+        const rotateTrack = this.sliderGroup.rect(250, 6)
+            .radius(3)
+            .fill('none')
+            .stroke({ color: this.colors.lightGray, width: 1 })
+            .move(340, 50);
+        
+        this.rotateHandle = this.sliderGroup.circle(16)
+            .fill(this.colors.teal)
+            .center(465, 53);
+            
+        // Instruction
+        this.sliderGroup.text('Click sliders to adjust all visuals')
+            .font({
+                family: 'Arial',
+                size: 12,
+                anchor: 'middle'
+            })
+            .fill(this.colors.gray)
+            .move(310, 90);
+            
+        // Make handles pulsate
+        this.animateSliderHandles();
+    }
     
-    const connectorGeometry = new THREE.BufferGeometry().setFromPoints(connectorPoints);
-    this.intervalConnector.geometry.dispose();
-    this.intervalConnector.geometry = connectorGeometry;
-    this.intervalConnector.computeLineDistances();
+    /**
+     * Create practice exercises section
+     */
+    createExerciseSection() {
+        this.exerciseGroup = this.svg.group().move(90, 1560);
+        
+        // Exercise container
+        this.exerciseGroup.rect(620, 400)
+            .radius(10)
+            .fill(this.colors.background)
+            .stroke({ color: this.colors.lightGray, width: 1 });
+        
+        // Title
+        this.exerciseGroup.text('Practice Exercises')
+            .font({
+                family: 'Georgia',
+                size: 20,
+                anchor: 'middle',
+                weight: 'bold'
+            })
+            .fill(this.colors.brown)
+            .move(310, 30);
+        
+        // Questions
+        const questions = [
+            "f(10) = -5, f'(10) = 6. Find f(10.1).",
+            "s(t) = -16t^2 + 64. Find v(2), avg vel [0,2].",
+            "s(t) = t^3 - 4t + 2. Find v(1), a(1).",
+            "P(0) = 3,000, P'(0) = 100. Pop in 3 days?",
+            "R(x) = -0.03x^2 + 9x. MR(100)?"
+        ];
+        
+        questions.forEach((q, i) => {
+            this.exerciseGroup.text(`${i+1}. ${q}`)
+                .font({
+                    family: 'Arial',
+                    size: 14,
+                    anchor: 'start'
+                })
+                .fill(this.colors.gray)
+                .move(40, 80 + i * 40);
+        });
+        
+        // Submit button
+        const submitBtn = this.exerciseGroup.rect(150, 40)
+            .radius(5)
+            .fill('none')
+            .stroke({ color: this.colors.teal, width: 2 })
+            .move(40, 300);
+            
+        this.exerciseGroup.text('Submit Answers')
+            .font({
+                family: 'Arial',
+                size: 14,
+                anchor: 'middle',
+                weight: 'normal'
+            })
+            .fill(this.colors.teal)
+            .move(115, 318);
+            
+        // Solutions text
+        this.exerciseGroup.text('View solutions after submission')
+            .font({
+                family: 'Arial',
+                size: 12,
+                anchor: 'start',
+                style: 'italic'
+            })
+            .fill(this.colors.gray)
+            .move(210, 318);
+            
+        // Animate submit button
+        this.animateSubmitButton(submitBtn);
+    }
     
-    const slopeLength = 1.0;
-    const slope = this.state.speed;
+    /**
+     * Create footer section
+     */
+    createFooter() {
+        this.footerGroup = this.svg.group().move(0, 1990);
+        
+        // Title
+        this.footerGroup.text('Related Topics')
+            .font({
+                family: 'Georgia',
+                size: 18,
+                anchor: 'start',
+                weight: 'bold'
+            })
+            .fill(this.colors.brown)
+            .move(90, 30);
+        
+        // Link buttons
+        const topics = ['Tangent Slope', 'Instantaneous Velocity'];
+        
+        topics.forEach((topic, i) => {
+            const x = 260 + i * 230;
+            
+            this.footerGroup.rect(200, 40)
+                .radius(20)
+                .fill('none')
+                .stroke({ color: this.colors.teal, width: 2 })
+                .move(x, 20);
+                
+            this.footerGroup.text(topic)
+                .font({
+                    family: 'Arial',
+                    size: 14,
+                    anchor: 'middle',
+                    weight: 'normal'
+                })
+                .fill(this.colors.teal)
+                .move(x + 100, 38);
+        });
+    }
     
-    const slopePoints = [
-      new THREE.Vector3(
-        currentX - slopeLength/2,
-        currentY - (slope * slopeLength/2),
-        0.02
-      ),
-      new THREE.Vector3(
-        currentX + slopeLength/2,
-        currentY + (slope * slopeLength/2),
-        0.02
-      )
-    ];
+    /**
+     * Setup interactive elements
+     */
+    setupInteractivity() {
+        // Setup topic clicks
+        this.svg.findOne('rect[data-topic="amount"]').on('click', () => this.onTopicClick('amount'));
+        this.svg.findOne('rect[data-topic="average-vs-instantaneous"]').on('click', () => this.onTopicClick('average-vs-instantaneous'));
+        this.svg.findOne('rect[data-topic="motion"]').on('click', () => this.onTopicClick('motion'));
+        this.svg.findOne('rect[data-topic="population"]').on('click', () => this.onTopicClick('population'));
+        this.svg.findOne('rect[data-topic="marginal"]').on('click', () => this.onTopicClick('marginal'));
+        
+        // Setup slider interactions
+        this.depthHandle.css({ cursor: 'pointer' }).on('click', (event) => {
+            const mouseX = event.clientX;
+            const trackStart = 30;
+            const trackEnd = 280;
+            const percentage = (mouseX - trackStart) / (trackEnd - trackStart);
+            const depth = Math.min(10, Math.max(0, percentage * 10));
+            
+            this.setDepth(depth);
+            
+            // Update UI
+            const depthValue = document.getElementById('depth-value');
+            if (depthValue) depthValue.textContent = depth.toFixed(1);
+        });
+        
+        this.rotateHandle.css({ cursor: 'pointer' }).on('click', (event) => {
+            const mouseX = event.clientX;
+            const trackStart = 340;
+            const trackEnd = 590;
+            const percentage = (mouseX - trackStart) / (trackEnd - trackStart);
+            const rotation = Math.min(360, Math.max(0, percentage * 360));
+            
+            this.setRotation(rotation);
+            
+            // Update UI
+            const rotateValue = document.getElementById('rotate-value');
+            if (rotateValue) rotateValue.textContent = Math.round(rotation);
+        });
+    }
     
-    const slopeGeometry = new THREE.BufferGeometry().setFromPoints(slopePoints);
-    this.slopeLine.geometry.dispose();
-    this.slopeLine.geometry = slopeGeometry;
-  }
-  
-  handleResize() {
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
+    /**
+     * Handle topic visualization click
+     */
+    onTopicClick(topic) {
+        // Toggle clicked state
+        this.state.clickedTopics[topic] = !this.state.clickedTopics[topic];
+        
+        // Trigger 3D-like transformation
+        this.applyTopicEffect(topic);
+        
+        // Update info panel values to match this topic
+        this.updateInfoValues(topic);
+    }
     
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
+    /**
+     * Apply 3D-like effect to topic visualization
+     */
+    applyTopicEffect(topic) {
+        const isClicked = this.state.clickedTopics[topic];
+        
+        switch(topic) {
+            case 'amount':
+                if (isClicked) {
+                    // Stretch curve downward, rotate tangent
+                    this.amountElements.curve.animate(500).plot('M40,140 Q160,70 280,120');
+                    this.amountElements.tangent.animate(500).plot(120, 70, 200, 90);
+                } else {
+                    // Reset
+                    this.amountElements.curve.animate(500).plot('M40,140 Q160,40 280,100');
+                    this.amountElements.tangent.animate(500).plot(120, 80, 200, 110);
+                }
+                break;
+                
+            case 'average-vs-instantaneous':
+                if (isClicked) {
+                    // Skew curve sideways, thicken secant
+                    this.rateElements.curve.animate(500).plot('M40,120 C100,160 160,40 280,50');
+                    this.rateElements.secant.animate(500).stroke({ width: 4 });
+                } else {
+                    // Reset
+                    this.rateElements.curve.animate(500).plot('M40,120 C100,140 160,40 280,70');
+                    this.rateElements.secant.animate(500).stroke({ width: 2 });
+                }
+                break;
+                
+            case 'motion':
+                if (isClicked) {
+                    // Flatten path vertically, enlarge circle
+                    // Flatten path vertically, enlarge circle
+                    this.motionElements.path.animate(500).plot('M40,130 C80,120 120,140 160,130 S240,120 280,130');
+                    this.motionElements.circle.animate(500).radius(18);
+                } else {
+                    // Reset
+                    this.motionElements.path.animate(500).plot('M40,120 C80,100 120,140 160,120 S240,100 280,120');
+                    this.motionElements.circle.animate(500).radius(6);
+                }
+                break;
+                
+            case 'population':
+                if (isClicked) {
+                    // Expand line endpoints outward
+                    this.populationElements.line.animate(500).plot(20, 130, 300, 20);
+                } else {
+                    // Reset
+                    this.populationElements.line.animate(500).plot(40, 120, 280, 40);
+                }
+                break;
+                
+            case 'marginal':
+                if (isClicked) {
+                    // Rotate curve, change tangent color
+                    this.marginalElements.curve.animate(500).plot('M40,100 Q160,40 280,100');
+                    this.marginalElements.tangent.animate(500).stroke({ color: this.colors.tan });
+                } else {
+                    // Reset
+                    this.marginalElements.curve.animate(500).plot('M40,60 Q160,140 280,40');
+                    this.marginalElements.tangent.animate(500).stroke({ color: this.colors.teal });
+                }
+                break;
+        }
+    }
     
-    this.renderer.setSize(width, height);
-  }
-  
-  animate() {
-    requestAnimationFrame(() => this.animate());
+    /**
+     * Update info panel values based on selected topic
+     */
+    updateInfoValues(topic) {
+        // Get the info display elements
+        const instantRateEl = document.getElementById('instant-rate');
+        const avgRateEl = document.getElementById('avg-rate');
+        const timeIntervalEl = document.getElementById('time-interval');
+        
+        if (!instantRateEl || !avgRateEl || !timeIntervalEl) return;
+        
+        // Set values based on topic
+        switch(topic) {
+            case 'amount':
+                instantRateEl.textContent = '5.00';
+                avgRateEl.textContent = '4.00';
+                timeIntervalEl.textContent = '0.20';
+                break;
+                
+            case 'average-vs-instantaneous':
+                instantRateEl.textContent = '-3.00';
+                avgRateEl.textContent = '-2.50';
+                timeIntervalEl.textContent = '0.50';
+                break;
+                
+            case 'motion':
+                instantRateEl.textContent = '-32.00';
+                avgRateEl.textContent = '-32.00';
+                timeIntervalEl.textContent = '2.00';
+                break;
+                
+            case 'population':
+                instantRateEl.textContent = '100.00';
+                avgRateEl.textContent = '97.00';
+                timeIntervalEl.textContent = '1.00';
+                break;
+                
+            case 'marginal':
+                instantRateEl.textContent = '3.00';
+                avgRateEl.textContent = '2.75';
+                timeIntervalEl.textContent = '0.10';
+                break;
+        }
+    }
     
-    this.update();
-    this.renderer.render(this.scene, this.camera);
-  }
-  
-  // Public methods for external control
-  setSpeed(speed) {
-    this.state.speed = speed;
-  }
-  
-  setTimeInterval(interval) {
-    this.state.timeInterval = interval;
-  }
-  
-  togglePlay() {
-    this.state.playing = !this.state.playing;
-    return this.state.playing;
-  }
-  
-  reset() {
-    this.state.time = 0;
-    this.vehicle.position.x = -20;
-    this.trailPoints = [];
-    this.updateTrail();
-  }
+    /**
+     * Apply depth effect to all visualizations
+     */
+    updateDepthEffect() {
+        const depth = this.state.depth;
+        
+        // Scale curves based on depth
+        if (this.amountElements) {
+            this.amountElements.curve.transform({ scale: 1, skew: [0, depth * 3] });
+        }
+        
+        if (this.rateElements) {
+            this.rateElements.curve.transform({ scale: 1, skew: [depth * 3, 0] });
+        }
+        
+        if (this.motionElements) {
+            // Flatten path based on depth
+            const pathString = `M40,${120 - depth * 5} C80,${100 - depth * 8} 120,${140 - depth * 5} 160,${120 - depth * 8} S240,${100 - depth * 5} 280,${120 - depth * 8}`;
+            this.motionElements.path.plot(pathString);
+        }
+        
+        if (this.populationElements) {
+            // Adjust line thickness based on depth
+            this.populationElements.line.stroke({ width: 3 + depth * 0.5 });
+        }
+        
+        if (this.marginalElements) {
+            // Adjust curve based on depth
+            const curveString = `M40,${60 + depth * 4} Q160,${140 - depth * 8} 280,${40 + depth * 6}`;
+            this.marginalElements.curve.plot(curveString);
+        }
+    }
+    
+    /**
+     * Apply rotation effect to all visualizations
+     */
+    updateRotationEffect() {
+        const rotation = this.state.rotation;
+        
+        // For simplicity, we'll just apply a slight perspective transform based on rotation
+        // In a real implementation, this would use more complex 3D transforms
+        
+        const contentGroups = [
+            this.amountSection, 
+            this.rateElements, 
+            this.motionElements, 
+            this.populationElements, 
+            this.marginalElements
+        ];
+        
+        contentGroups.forEach(group => {
+            if (group) {
+                const radians = (rotation * Math.PI) / 180;
+                const skewX = Math.sin(radians) * 0.5; // Limit skew amount
+                const scaleY = 1 - Math.abs(Math.sin(radians)) * 0.2; // Slight scale effect
+                
+                // Apply transform if the element supports it
+                if (group.transform) {
+                    group.transform({ skew: [skewX, 0], scale: [1, scaleY] });
+                }
+            }
+        });
+    }
+    
+    /**
+     * Start background animation loop
+     */
+    startBackgroundAnimations() {
+        // Use requestAnimationFrame for smooth animation
+        const animate = () => {
+            this.animateBackgroundSymbols();
+            requestAnimationFrame(animate);
+        };
+        
+        animate();
+    }
+    
+    /**
+     * Animate floating background symbols
+     */
+    animateBackgroundSymbols() {
+        // Animate each background symbol
+        this.backgroundGroup.children().forEach(symbol => {
+            const data = symbol.data();
+            
+            // Move symbol
+            let x = symbol.x() + data.speedX;
+            let y = symbol.y() + data.speedY;
+            
+            // Wrap around if outside bounds
+            if (y < -100) y = this.height + 50;
+            if (x < -50) x = this.width + 50;
+            if (x > this.width + 50) x = -50;
+            
+            symbol.move(x, y);
+            
+            // Fade in/out
+            let opacity = data.opacity + (0.0005 * data.opacityDir);
+            
+            // Change direction if reaching limits
+            if (opacity > 0.15 || opacity < 0.05) {
+                data.opacityDir *= -1;
+            }
+            
+            data.opacity = opacity;
+            symbol.fill({ opacity: opacity });
+        });
+    }
+    
+    /**
+     * Animate logo circle pulsing
+     */
+    animateLogo(logoCircle) {
+        // Create pulsing animation
+        logoCircle.animate({
+            duration: 3000,
+            ease: '<>',
+            swing: true,
+            times: Infinity
+        }).attr({
+            r: 22,  // Pulse from 20 to 22
+        }).loop(true, true);
+    }
+    
+    /**
+     * Animate title line and circle
+     */
+    animateTitleElements(line, circle) {
+        // Animate dash pattern on line
+        line.animate({
+            duration: 4000,
+            ease: '<>',
+            times: Infinity
+        }).attr({
+            'stroke-dashoffset': 20
+        }).loop(true, true);
+        
+        // Pulse circle
+        circle.animate({
+            duration: 2000,
+            ease: '<>',
+            times: Infinity
+        }).attr({
+            r: 7
+        }).loop(true, true);
+    }
+    
+    /**
+     * Animate slider handles
+     */
+    animateSliderHandles() {
+        // Pulse the slider handles
+        this.depthHandle.animate({
+            duration: 2000,
+            ease: '<>',
+            times: Infinity
+        }).attr({
+            r: 10
+        }).loop(true, true);
+        
+        this.rotateHandle.animate({
+            duration: 2000,
+            ease: '<>',
+            times: Infinity,
+            delay: 500  // Offset timing
+        }).attr({
+            r: 10
+        }).loop(true, true);
+    }
+    
+    /**
+     * Animate submit button outline
+     */
+    animateSubmitButton(button) {
+        // Pulse the button outline
+        button.animate({
+            duration: 2000,
+            ease: '<>',
+            times: Infinity
+        }).attr({
+            'stroke-width': 4
+        }).loop(true, true);
+    }
+    
+    /** 
+     * Public methods for external control
+     */
+     
+    /**
+     * Set depth value (0-10)
+     */
+    setDepth(depth) {
+        this.state.depth = depth;
+        
+        // Update depth handle position
+        const handleX = 30 + ((depth / 10) * 250);
+        this.depthHandle.center(handleX, 53);
+        
+        // Apply effect
+        this.updateDepthEffect();
+    }
+    
+    /**
+     * Set rotation value (0-360)
+     */
+    setRotation(rotation) {
+        this.state.rotation = rotation;
+        
+        // Update rotation handle position
+        const handleX = 340 + ((rotation / 360) * 250);
+        this.rotateHandle.center(handleX, 53);
+        
+        // Apply effect
+        this.updateRotationEffect();
+    }
+    
+    /**
+     * Set current topic
+     */
+    setTopic(topic) {
+        this.currentTopic = topic;
+        
+        // Highlight selected topic
+        // Reset all
+        ['amount', 'average-vs-instantaneous', 'motion', 'population', 'marginal'].forEach(t => {
+            const vizEl = this[`${t}Viz`];
+            if (vizEl) {
+                vizEl.stroke({ color: this.colors.lightGray, width: 1 });
+            }
+        });
+        
+        // Highlight selected
+        const selectedViz = this[`${topic}Viz`];
+        if (selectedViz) {
+            selectedViz.stroke({ color: this.colors.teal, width: 3 });
+        }
+        
+        // Update info panel
+        this.updateInfoValues(topic);
+    }
+    
+    /**
+     * Toggle tangent lines
+     */
+    toggleTangent(show) {
+        this.state.showTangent = show;
+        
+        // Update tangent lines visibility
+        ['amount', 'average-vs-instantaneous', 'population', 'marginal'].forEach(topic => {
+            const elements = this[`${topic}Elements`];
+            if (elements && elements.tangent) {
+                elements.tangent.opacity(show ? 1 : 0);
+            }
+        });
+    }
+    
+    /**
+     * Toggle secant lines
+     */
+    toggleSecant(show) {
+        this.state.showSecant = show;
+        
+        // Update secant lines visibility
+        ['amount', 'average-vs-instantaneous'].forEach(topic => {
+            const elements = this[`${topic}Elements`];
+            if (elements && elements.secant) {
+                elements.secant.opacity(show ? 1 : 0);
+            }
+        });
+    }
 }
