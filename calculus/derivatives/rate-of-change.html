@@ -13,10 +13,6 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
     
-    <!-- Three.js library - CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.156.1/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.156.1/examples/jsm/controls/OrbitControls.js"></script>
-    
     <!-- GSAP for animations - CDN -->
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
     
@@ -256,9 +252,6 @@
         <p>&copy; 2025 Calculus Utility</p>
     </footer>
     
-    <!-- Core Scripts -->
-    <script src="../../js/main.js"></script>
-    
     <!-- Custom Rate of Change Script -->
     <script src="../../js/visualizations/derivatives/rate-of-change.js"></script>
     
@@ -266,13 +259,15 @@
         // Initialize KaTeX rendering for math formulas
         document.addEventListener('DOMContentLoaded', function() {
             // Render KaTeX in formulas
-            renderMathInElement(document.body, {
-                delimiters: [
-                    {left: '\\(', right: '\\)', display: false},
-                    {left: '\\[', right: '\\]', display: true},
-                    {left: '$$', right: '$$', display: true}
-                ]
-            });
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true},
+                        {left: '$$', right: '$$', display: true}
+                    ]
+                });
+            }
             
             // Initialize visualization
             const visContainer = document.getElementById('rate-of-change-vis');
