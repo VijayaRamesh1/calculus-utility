@@ -19,6 +19,9 @@
     
     <!-- GSAP for animations -->
     <script src="../../libs/gsap/gsap.min.js"></script>
+    
+    <!-- SVG.js for SVG manipulations -->
+    <script src="../../libs/svg.js/svg.min.js"></script>
 </head>
 <body>
     <header>
@@ -32,15 +35,76 @@
     </header>
     
     <main>
-        <!-- Visualization Section -->
+        <!-- Interactive SVG Section -->
         <section class="visualization-section">
             <h2>Interactive Visualization</h2>
             <div class="vis-wrapper">
                 <div id="rate-of-change-vis" class="vis-container">
-                    <!-- Visualization will be rendered here -->
+                    <!-- SVG will be rendered here -->
                 </div>
                 <div class="controls">
-                    <!-- Interactive controls will be added here by the script -->
+                    <div class="control-panel">
+                        <div class="panel-header">
+                            <h3>Visualization Controls</h3>
+                        </div>
+                        <div class="panel-content">
+                            <div class="slider-container">
+                                <label for="depth-slider">Adjust Depth <span id="depth-value" class="slider-value">0</span></label>
+                                <input type="range" id="depth-slider" min="0" max="10" value="0" step="0.5">
+                            </div>
+                            <div class="slider-container">
+                                <label for="rotate-slider">Rotate View <span id="rotate-value" class="slider-value">0</span></label>
+                                <input type="range" id="rotate-slider" min="0" max="360" value="0" step="10">
+                            </div>
+                            <div class="dropdown-container">
+                                <label for="topic-selector">Select Topic</label>
+                                <select id="topic-selector">
+                                    <option value="amount">1. Amount of Change</option>
+                                    <option value="average-vs-instantaneous">2. Average vs Instantaneous Rate</option>
+                                    <option value="motion">3. Motion Along a Line</option>
+                                    <option value="population">4. Population Growth</option>
+                                    <option value="marginal">5. Marginal Functions</option>
+                                </select>
+                            </div>
+                            <div class="toggle-container">
+                                <label for="tangent-toggle">Show Tangent Lines</label>
+                                <label class="toggle-switch-container">
+                                    <input type="checkbox" id="tangent-toggle" checked>
+                                    <span class="toggle-switch"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-container">
+                                <label for="secant-toggle">Show Secant Lines</label>
+                                <label class="toggle-switch-container">
+                                    <input type="checkbox" id="secant-toggle" checked>
+                                    <span class="toggle-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-panel">
+                        <div class="panel-header">
+                            <h3>Information</h3>
+                        </div>
+                        <div class="panel-content">
+                            <div class="info-item">
+                                <span class="info-label">Instantaneous Rate:</span>
+                                <span id="instant-rate" class="info-value">0.00</span>
+                                <span class="info-unit">units/s</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Average Rate:</span>
+                                <span id="avg-rate" class="info-value">0.00</span>
+                                <span class="info-unit">units/s</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Time Interval:</span>
+                                <span id="time-interval" class="info-value">0.00</span>
+                                <span class="info-unit">s</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -115,9 +179,9 @@
                     <li><strong>Environmental Science:</strong> Population growth, pollution diffusion</li>
                 </ul>
                 <p>
-                    In the visualization above, we're demonstrating the concept using a vehicle's motion,
-                    where the derivative (instantaneous rate of change) represents the vehicle's speed at
-                    any given moment.
+                    In the visualization above, we demonstrate the concept using different mathematical models,
+                    where the derivative (instantaneous rate of change) represents how quickly the function
+                    changes at any given point.
                 </p>
             </div>
             
@@ -148,18 +212,42 @@
             </div>
             
             <div class="concept-card">
+                <h3>Practice Exercises</h3>
+                <p>Try solving these problems to test your understanding:</p>
+                <ol>
+                    <li>If f(10) = -5 and f'(10) = 6, find an approximation for f(10.1).</li>
+                    <li>Given s(t) = -16t² + 64, find v(2) and the average velocity over [0,2].</li>
+                    <li>For s(t) = t³ - 4t + 2, find the velocity v(1) and acceleration a(1).</li>
+                    <li>If P(0) = 3,000 and P'(0) = 100, estimate the population after 3 days.</li>
+                    <li>If R(x) = -0.03x² + 9x, find the marginal revenue MR(100).</li>
+                </ol>
+                <div id="practice-submit" class="control-button">Submit Answers</div>
+                <p id="solutions-message" style="display: none;">Solutions will appear here after submission.</p>
+            </div>
+            
+            <div class="concept-card">
                 <h3>Experimenting with the Visualization</h3>
                 <p>To get the most out of the interactive visualization above:</p>
                 <ol>
-                    <li>Try changing the <strong>Time Interval</strong> slider to see how the average rate (secant line) approaches the instantaneous rate (tangent line) as the interval gets smaller.</li>
-                    <li>Experiment with different <strong>Path Types</strong> to observe how the rates of change differ with linear, accelerating, and oscillating motion.</li>
-                    <li>Toggle between showing the <strong>Instantaneous Rate</strong> (green tangent) and <strong>Average Rate</strong> (red secant) to understand each concept individually.</li>
-                    <li>Pay attention to the numerical values displayed in the Information panel, noticing how they relate to the visual representation.</li>
+                    <li>Try selecting different topics to explore various applications of derivatives.</li>
+                    <li>Use the <strong>Adjust Depth</strong> slider to create a pseudo-3D effect that helps visualize the relationships.</li>
+                    <li>Use the <strong>Rotate View</strong> slider to see the visualization from different angles.</li>
+                    <li>Toggle between showing the <strong>Tangent Lines</strong> (instantaneous rate) and <strong>Secant Lines</strong> (average rate) to understand each concept individually.</li>
+                    <li>Click on any visualization to see it transform with a 3D-like effect.</li>
                 </ol>
                 <p>
                     By exploring these interactions, you can develop an intuitive understanding of derivatives 
                     and how they relate to the concept of rate of change.
                 </p>
+            </div>
+        </section>
+        
+        <!-- Related Topics Section -->
+        <section class="related-topics">
+            <h2>Related Topics</h2>
+            <div class="topic-links">
+                <a href="tangent-slope.html" class="topic-link">Tangent Slope</a>
+                <a href="instantaneous-velocity.html" class="topic-link">Instantaneous Velocity</a>
             </div>
         </section>
     </main>
@@ -194,13 +282,57 @@
             
             // Initialize visualization
             const visContainer = document.getElementById('rate-of-change-vis');
-            const visualization = new RateOfChangeVisualization(visContainer, {
-                speed: 1,
-                timeInterval: 0.5,
-                pathType: 'linear',
-                showTangent: true,
-                showSecant: true,
-                showLabels: true
+            const rateOfChangeVis = new RateOfChangeVisualizer(visContainer);
+            
+            // Setup control interactions
+            const depthSlider = document.getElementById('depth-slider');
+            const rotateSlider = document.getElementById('rotate-slider');
+            const topicSelector = document.getElementById('topic-selector');
+            const tangentToggle = document.getElementById('tangent-toggle');
+            const secantToggle = document.getElementById('secant-toggle');
+            
+            // Update labels
+            const depthValue = document.getElementById('depth-value');
+            const rotateValue = document.getElementById('rotate-value');
+            
+            depthSlider.addEventListener('input', function() {
+                depthValue.textContent = this.value;
+                rateOfChangeVis.setDepth(parseFloat(this.value));
+            });
+            
+            rotateSlider.addEventListener('input', function() {
+                rotateValue.textContent = this.value;
+                rateOfChangeVis.setRotation(parseInt(this.value));
+            });
+            
+            topicSelector.addEventListener('change', function() {
+                rateOfChangeVis.setTopic(this.value);
+            });
+            
+            tangentToggle.addEventListener('change', function() {
+                rateOfChangeVis.toggleTangent(this.checked);
+            });
+            
+            secantToggle.addEventListener('change', function() {
+                rateOfChangeVis.toggleSecant(this.checked);
+            });
+            
+            // Setup practice exercise submission
+            const practiceSubmit = document.getElementById('practice-submit');
+            const solutionsMessage = document.getElementById('solutions-message');
+            
+            practiceSubmit.addEventListener('click', function() {
+                solutionsMessage.style.display = 'block';
+                solutionsMessage.innerHTML = `
+                    <strong>Solutions:</strong>
+                    <ol>
+                        <li>f(10.1) ≈ f(10) + f'(10) × 0.1 = -5 + 6 × 0.1 = -5 + 0.6 = -4.4</li>
+                        <li>v(2) = s'(2) = -32 units/s, Average velocity = [s(2) - s(0)] ÷ 2 = [(-16×4 + 64) - 64] ÷ 2 = -32 units/s</li>
+                        <li>v(1) = s'(1) = 3 - 4 = -1 units/s, a(1) = v'(1) = s''(1) = 6 units/s²</li>
+                        <li>P(3) ≈ P(0) + P'(0) × 3 = 3,000 + 100 × 3 = 3,300 people</li>
+                        <li>MR(100) = R'(100) = -0.06 × 100 + 9 = -6 + 9 = 3 dollars/unit</li>
+                    </ol>
+                `;
             });
         });
     </script>
