@@ -6,7 +6,19 @@
     <title>Rate of Change - Derivatives - Calculus Utility</title>
     <link rel="stylesheet" href="../../css/main.css">
     <link rel="stylesheet" href="../../css/derivatives.css">
+    <link rel="stylesheet" href="../../css/rate-of-change.css">
+    
+    <!-- KaTeX for math typesetting -->
+    <link rel="stylesheet" href="../../libs/katex/katex.min.css">
     <script src="../../libs/katex/katex.min.js" defer></script>
+    <script src="../../libs/katex/auto-render.min.js" defer></script>
+    
+    <!-- Three.js library -->
+    <script src="../../libs/three/three.min.js"></script>
+    <script src="../../libs/three/OrbitControls.js"></script>
+    
+    <!-- GSAP for animations -->
+    <script src="../../libs/gsap/gsap.min.js"></script>
 </head>
 <body>
     <header>
@@ -18,34 +30,178 @@
             </ul>
         </nav>
     </header>
+    
     <main>
-        <section class="visualization">
+        <!-- Visualization Section -->
+        <section class="visualization-section">
             <h2>Interactive Visualization</h2>
-            <div id="rate-of-change-vis" class="vis-container">
-                <!-- Visualization will be rendered here -->
-            </div>
-            <div class="controls">
-                <!-- Interactive controls will be added here -->
+            <div class="vis-wrapper">
+                <div id="rate-of-change-vis" class="vis-container">
+                    <!-- Visualization will be rendered here -->
+                </div>
+                <div class="controls">
+                    <!-- Interactive controls will be added here by the script -->
+                </div>
             </div>
         </section>
-        <section class="content">
-            <!-- Content will be dynamically loaded from JSON -->
+        
+        <!-- Content Section -->
+        <section class="content-section">
+            <h2>Understanding Rate of Change</h2>
+            
+            <div class="concept-card">
+                <h3>What is Rate of Change?</h3>
+                <p>
+                    The rate of change describes how one quantity changes with respect to another. 
+                    In calculus, we're often interested in how quickly a function's output changes 
+                    as we change the input.
+                </p>
+                <p>
+                    For example, when driving a car, your speed (velocity) represents the rate of change 
+                    of your position with respect to time. The car's speedometer is essentially displaying 
+                    the derivative of your position.
+                </p>
+                <div class="math-formula">
+                    <p>Mathematically, the rate of change can be expressed as:</p>
+                    <p class="formula">
+                        \text{Rate of Change} = \frac{\Delta y}{\Delta x} = \frac{f(x_2) - f(x_1)}{x_2 - x_1}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="concept-card">
+                <h3>Average vs. Instantaneous Rate</h3>
+                <p>
+                    There are two important types of rates of change:
+                </p>
+                <ul>
+                    <li>
+                        <strong>Average Rate of Change:</strong> The change over an interval.
+                        <p class="formula">
+                            \text{Average Rate} = \frac{f(x_2) - f(x_1)}{x_2 - x_1}
+                        </p>
+                        <p>
+                            This is represented by the <span class="highlight-red">secant line</span> 
+                            connecting two points on the function.
+                        </p>
+                    </li>
+                    <li>
+                        <strong>Instantaneous Rate of Change:</strong> The rate at a specific point.
+                        <p class="formula">
+                            \text{Instantaneous Rate} = \lim_{\Delta x \rightarrow 0} \frac{f(x + \Delta x) - f(x)}{\Delta x} = f'(x)
+                        </p>
+                        <p>
+                            This is represented by the <span class="highlight-green">tangent line</span> 
+                            at a single point on the function.
+                        </p>
+                    </li>
+                </ul>
+                <p>
+                    As the interval gets smaller, the average rate of change approaches the instantaneous rate of change.
+                    This is the fundamental concept behind derivatives.
+                </p>
+            </div>
+            
+            <div class="concept-card">
+                <h3>Real-World Applications</h3>
+                <p>
+                    Rate of change is fundamental across many fields:
+                </p>
+                <ul>
+                    <li><strong>Physics:</strong> Velocity (rate of change of position), acceleration (rate of change of velocity)</li>
+                    <li><strong>Economics:</strong> Marginal cost (rate of change of total cost)</li>
+                    <li><strong>Engineering:</strong> Flow rates, heat transfer rates</li>
+                    <li><strong>Medicine:</strong> Growth rates, concentration changes</li>
+                    <li><strong>Environmental Science:</strong> Population growth, pollution diffusion</li>
+                </ul>
+                <p>
+                    In the visualization above, we're demonstrating the concept using a vehicle's motion,
+                    where the derivative (instantaneous rate of change) represents the vehicle's speed at
+                    any given moment.
+                </p>
+            </div>
+            
+            <div class="concept-card">
+                <h3>Connection to Derivatives</h3>
+                <p>
+                    The derivative is the formal mathematical concept that defines the instantaneous rate of change.
+                    It answers the question: "How quickly is this function changing at this exact point?"
+                </p>
+                <p>
+                    When we take the derivative of a function, we're finding a new function that gives the 
+                    instantaneous rate of change at any input value. In the context of our visualization:
+                </p>
+                <div class="math-formula">
+                    <p>If position is given by function \(s(t)\), then:</p>
+                    <p class="formula">
+                        \text{Velocity} = \frac{d}{dt}s(t) = s'(t)
+                    </p>
+                    <p>And if velocity is given by function \(v(t)\), then:</p>
+                    <p class="formula">
+                        \text{Acceleration} = \frac{d}{dt}v(t) = v'(t) = s''(t)
+                    </p>
+                </div>
+                <p>
+                    This hierarchical relationship between position, velocity, and acceleration 
+                    demonstrates how derivatives can be used to describe related quantities in physics.
+                </p>
+            </div>
+            
+            <div class="concept-card">
+                <h3>Experimenting with the Visualization</h3>
+                <p>To get the most out of the interactive visualization above:</p>
+                <ol>
+                    <li>Try changing the <strong>Time Interval</strong> slider to see how the average rate (secant line) approaches the instantaneous rate (tangent line) as the interval gets smaller.</li>
+                    <li>Experiment with different <strong>Path Types</strong> to observe how the rates of change differ with linear, accelerating, and oscillating motion.</li>
+                    <li>Toggle between showing the <strong>Instantaneous Rate</strong> (green tangent) and <strong>Average Rate</strong> (red secant) to understand each concept individually.</li>
+                    <li>Pay attention to the numerical values displayed in the Information panel, noticing how they relate to the visual representation.</li>
+                </ol>
+                <p>
+                    By exploring these interactions, you can develop an intuitive understanding of derivatives 
+                    and how they relate to the concept of rate of change.
+                </p>
+            </div>
         </section>
     </main>
+    
     <footer>
         <p>&copy; 2025 Calculus Utility</p>
     </footer>
+    
+    <!-- Core Scripts -->
     <script src="../../js/main.js"></script>
-    <script src="../../js/content/content-loader.js"></script>
+    
+    <!-- Visualization Core Scripts -->
     <script src="../../js/visualizations/core/visualization-base.js"></script>
     <script src="../../js/visualizations/core/graph-utilities.js"></script>
     <script src="../../js/visualizations/core/math-utilities.js"></script>
+    <script src="../../js/visualizations/core/interaction-utilities.js"></script>
+    
+    <!-- Topic-Specific Scripts -->
     <script src="../../js/visualizations/derivatives/rate-of-change.js"></script>
+    
     <script>
-        // Initialize the visualization
+        // Initialize KaTeX rendering for math formulas
         document.addEventListener('DOMContentLoaded', function() {
-            // Load content
+            // Render KaTeX in formulas
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '$$', right: '$$', display: true}
+                ]
+            });
+            
             // Initialize visualization
+            const visContainer = document.getElementById('rate-of-change-vis');
+            const visualization = new RateOfChangeVisualization(visContainer, {
+                speed: 1,
+                timeInterval: 0.5,
+                pathType: 'linear',
+                showTangent: true,
+                showSecant: true,
+                showLabels: true
+            });
         });
     </script>
 </body>
